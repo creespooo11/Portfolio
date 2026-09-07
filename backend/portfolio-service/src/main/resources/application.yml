@@ -1,0 +1,21 @@
+server:
+  port: ${PORTFOLIO_SERVICE_PORT:8081}
+
+spring:
+  application:
+    name: portfolio-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:portfolio}
+    username: ${POSTGRES_USER:portfolio}
+    password: ${POSTGRES_PASSWORD:portfolio_dev}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        '[format_sql]': true
+  sql:
+    init:
+      mode: never
+
