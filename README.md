@@ -32,7 +32,7 @@ infra/
 ## Estado del proyecto
 
 - [x] Fase 1: estructura inicial, documentación y dependencias locales.
-- [ ] Fase 2: `portfolio-service` con Spring Boot y PostgreSQL.
+- [x] Fase 2: `portfolio-service` con Spring Boot y PostgreSQL.
 - [ ] Fase 3: frontend Vue 3 + Vite.
 - [ ] Fase 4: `contact-service` y publicación de eventos.
 - [ ] Fase 5: `notification-service` y MongoDB.
@@ -75,6 +75,17 @@ Los datos se conservan en volúmenes Docker. Para eliminarlos también, usa `doc
 Kafka/Redpanda es deliberadamente parte de la demostración de arquitectura, aunque sería más infraestructura de la necesaria para un formulario personal. En producción se podrá mantener con un proveedor Kafka compatible o sustituir el transporte por una cola gestionada; el contrato de evento mantendrá desacoplados el contacto y la notificación.
 
 Las credenciales, claves SMTP y valores de producción no se guardan en Git. Usa `.env.example` como contrato de configuración.
+
+## API disponible
+
+Con el stack local arrancado, `portfolio-service` está disponible en `http://localhost:8081`:
+
+- `GET /api/projects` y `GET /api/projects/{id}`: consulta de proyectos.
+- `POST`, `PUT` y `DELETE /api/projects/{id}`: operaciones CRUD iniciales para administración local.
+- `GET /api/skills`: consulta de tecnologías y habilidades.
+- `GET /api/experience`: consulta de experiencia.
+
+El contenido inicial se inserta automáticamente en PostgreSQL cuando las tablas están vacías.
 
 ## Licencia
 

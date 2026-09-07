@@ -1,4 +1,22 @@
 services:
+  portfolio-service:
+    build:
+      context: ./backend/portfolio-service
+    container_name: portfolio-service
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      PORTFOLIO_SERVICE_PORT: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORTFOLIO_SERVICE_PORT}:8081"
+
   postgres:
     image: postgres:16-alpine
     container_name: portfolio-postgres
