@@ -1,0 +1,573 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+:root {
+  font-family: "Space Grotesk", sans-serif;
+  color: #20211e;
+  background: #f4f0e8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #20211e;
+  --paper: #f4f0e8;
+  --acid: #d9f467;
+  --coral: #f07b61;
+  --line: rgba(32, 33, 30, 0.2);
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+.site-shell {
+  overflow: hidden;
+}
+.section-wrap {
+  width: min(1180px, calc(100% - 64px));
+  margin: 0 auto;
+}
+.topbar {
+  height: 82px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(1280px, calc(100% - 64px));
+  margin: auto;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.06em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.brand span {
+  color: var(--coral);
+}
+nav {
+  display: flex;
+  gap: 32px;
+}
+nav a,
+.availability,
+.text-link {
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.77rem;
+  font-family: "DM Mono", monospace;
+}
+.availability {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.availability i {
+  height: 7px;
+  width: 7px;
+  background: #67b56e;
+  border-radius: 50%;
+  display: block;
+}
+.hero {
+  min-height: 650px;
+  display: grid;
+  grid-template-columns: 1.04fr 0.96fr;
+  align-items: center;
+  gap: 70px;
+  padding: 75px 0 100px;
+}
+.eyebrow {
+  font:
+    500 0.67rem "DM Mono",
+    monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0 0 25px;
+}
+.hero h1 {
+  font-size: clamp(3.4rem, 6.5vw, 6.7rem);
+  line-height: 0.91;
+  letter-spacing: -0.075em;
+  max-width: 700px;
+  margin: 0;
+}
+.hero h1 em,
+h2 em {
+  font-family: Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.08em;
+}
+.hero-intro {
+  max-width: 430px;
+  line-height: 1.65;
+  font-size: 1rem;
+  margin: 37px 0;
+}
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 20px;
+  text-decoration: none;
+  font:
+    500 0.72rem "DM Mono",
+    monospace;
+}
+.button-dark {
+  background: var(--ink);
+  color: var(--paper);
+}
+.button span {
+  font-size: 1.2rem;
+}
+.text-link {
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 4px;
+}
+.hero-art {
+  height: 470px;
+  position: relative;
+  background: var(--coral);
+  border-radius: 50% 50% 3px 3px;
+  transform: rotate(3deg);
+}
+.art-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(32, 33, 30, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32, 33, 30, 0.12) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+.art-card-main {
+  position: absolute;
+  top: 100px;
+  left: 15%;
+  width: 63%;
+  height: 235px;
+  background: var(--paper);
+  padding: 24px;
+  box-shadow: 18px 18px 0 var(--ink);
+  transform: rotate(-8deg);
+}
+.code-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--coral);
+  margin-bottom: 28px;
+}
+.code-line {
+  display: block;
+  height: 5px;
+  background: var(--ink);
+  margin: 8px 0;
+  opacity: 0.8;
+}
+.code-line.long {
+  width: 44%;
+}
+.code-line.medium {
+  width: 30%;
+}
+.code-line.short {
+  width: 20%;
+}
+.art-card-main strong {
+  display: block;
+  margin-top: 35px;
+  font-size: 1.55rem;
+  line-height: 0.92;
+  letter-spacing: -0.06em;
+}
+.art-note {
+  position: absolute;
+  right: 8%;
+  bottom: 35px;
+  font:
+    500 0.62rem "DM Mono",
+    monospace;
+  line-height: 1.7;
+}
+.art-note b {
+  font:
+    1.2rem Georgia,
+    serif;
+  line-height: 1;
+}
+.art-orbit {
+  position: absolute;
+  top: 27px;
+  right: 27px;
+  font-size: 2rem;
+}
+.ticker {
+  background: var(--ink);
+  color: var(--acid);
+  font:
+    500 0.78rem "DM Mono",
+    monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 19px 0;
+}
+.ticker-track {
+  display: flex;
+  will-change: transform;
+}
+.ticker-content {
+  display: flex;
+  align-items: center;
+  word-spacing: 18px;
+  padding-right: 18px;
+  flex-shrink: 0;
+}
+.ticker-content > span {
+  flex-shrink: 0;
+}
+.ticker-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  left: -9999px;
+}
+.ticker .dot {
+  color: var(--coral);
+}
+.work-section,
+.skill-section {
+  padding: 130px 0;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  margin-bottom: 60px;
+}
+.section-heading h2,
+.about-section h2,
+.experience-section h2,
+.contact-section h2 {
+  font-size: clamp(2.8rem, 5vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+  margin: 0;
+}
+.section-index {
+  font:
+    500 0.7rem "DM Mono",
+    monospace;
+}
+.project-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 62px;
+  gap: 30px;
+  align-items: center;
+  border-top: 1px solid var(--line);
+  padding: 32px 0;
+}
+.project-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+.project-number {
+  font:
+    500 0.75rem "DM Mono",
+    monospace;
+}
+.project-info h3 {
+  font-size: 1.65rem;
+  letter-spacing: -0.05em;
+  margin: 0 0 11px;
+}
+.project-info p {
+  max-width: 540px;
+  line-height: 1.55;
+  margin: 0;
+  font-size: 0.88rem;
+}
+.project-info .project-type {
+  font:
+    500 0.65rem "DM Mono",
+    monospace;
+  text-transform: uppercase;
+  margin-bottom: 11px;
+  color: #75746f;
+}
+.round-arrow {
+  height: 52px;
+  width: 52px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 1.3rem;
+  transition: 0.2s;
+}
+.round-arrow:hover {
+  background: var(--ink);
+  color: var(--paper);
+  transform: rotate(45deg);
+}
+.about-section {
+  background: var(--acid);
+  padding: 120px 0;
+}
+.about-grid,
+.experience-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+}
+.about-copy {
+  max-width: 470px;
+  padding-top: 55px;
+}
+.about-copy p {
+  font-size: 1.2rem;
+  line-height: 1.45;
+  margin: 0 0 25px;
+}
+.filter-list {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 35px;
+}
+.filter-list button {
+  font:
+    500 0.7rem "DM Mono",
+    monospace;
+  border: 1px solid var(--line);
+  background: none;
+  padding: 10px 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.filter-list button.active,
+.filter-list button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+.skill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 24px;
+  border-top: 1px solid var(--line);
+}
+.skill-item {
+  border-bottom: 1px solid var(--line);
+  padding: 22px 24px 22px 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.04em;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.skill-item span {
+  color: var(--coral);
+  font-size: 1rem;
+}
+.skill-item small {
+  margin-left: auto;
+  font:
+    500 0.58rem "DM Mono",
+    monospace;
+  text-transform: uppercase;
+  color: #777;
+}
+.experience-section {
+  background: #d9d5cd;
+  padding: 120px 0;
+}
+.experience-list {
+  padding-top: 35px;
+}
+.experience-list article {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 30px;
+  border-top: 1px solid var(--line);
+  padding: 25px 0;
+}
+.period {
+  font:
+    500 0.65rem "DM Mono",
+    monospace;
+}
+.experience-list h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.company {
+  font:
+    500 0.7rem "DM Mono",
+    monospace;
+  text-transform: uppercase;
+  margin: 7px 0 18px;
+}
+.experience-list p:last-child {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
+}
+.contact-section {
+  background: var(--coral);
+  padding: 125px 0 38px;
+}
+.contact-inner {
+  min-height: 480px;
+}
+.contact-email {
+  display: inline-block;
+  margin-top: 55px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  font:
+    500 1rem "DM Mono",
+    monospace;
+  padding-bottom: 8px;
+}
+.contact-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  margin-top: 120px;
+  font:
+    500 0.62rem "DM Mono",
+    monospace;
+}
+.site-footer {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font:
+    500 0.62rem "DM Mono",
+    monospace;
+}
+.site-footer span:first-child {
+  font-size: 1.25rem;
+  letter-spacing: -0.08em;
+}
+.loading-state,
+.error-state {
+  border-top: 1px solid var(--line);
+  padding: 25px 0;
+  font:
+    500 0.75rem "DM Mono",
+    monospace;
+}
+.error-state {
+  color: #a23d30;
+}
+@media (max-width: 760px) {
+  .section-wrap,
+  .topbar {
+    width: calc(100% - 36px);
+  }
+  .topbar {
+    height: 70px;
+  }
+  .topbar nav {
+    display: none;
+  }
+  .availability {
+    font-size: 0.58rem;
+  }
+  .hero {
+    display: block;
+    padding: 70px 0 80px;
+    min-height: auto;
+  }
+  .hero h1 {
+    font-size: 3.65rem;
+  }
+  .hero-art {
+    height: 350px;
+    margin-top: 65px;
+  }
+  .art-card-main {
+    top: 70px;
+    height: 190px;
+  }
+  .art-card-main strong {
+    font-size: 1.2rem;
+    margin-top: 25px;
+  }
+  .work-section,
+  .skill-section,
+  .about-section,
+  .experience-section {
+    padding: 82px 0;
+  }
+  .section-heading {
+    display: block;
+    margin-bottom: 40px;
+  }
+  .section-index {
+    display: block;
+    margin-top: 25px;
+  }
+  .project-row {
+    grid-template-columns: 35px 1fr 45px;
+    gap: 12px;
+  }
+  .project-info h3 {
+    font-size: 1.25rem;
+  }
+  .round-arrow {
+    height: 40px;
+    width: 40px;
+  }
+  .about-grid,
+  .experience-grid {
+    display: block;
+  }
+  .about-copy {
+    padding-top: 40px;
+  }
+  .about-copy p {
+    font-size: 1rem;
+  }
+  .skill-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .skill-item {
+    font-size: 1rem;
+    display: block;
+  }
+  .skill-item small {
+    display: block;
+    margin: 7px 0 0;
+  }
+  .experience-list {
+    padding-top: 50px;
+  }
+  .experience-list article {
+    grid-template-columns: 75px 1fr;
+    gap: 15px;
+  }
+  .contact-section {
+    padding: 90px 0 25px;
+  }
+  .contact-footer {
+    display: block;
+    margin-top: 100px;
+    line-height: 2;
+  }
+  .contact-footer span {
+    display: block;
+  }
+}
