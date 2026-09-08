@@ -1,4 +1,14 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: portfolio-frontend
+    restart: unless-stopped
+    depends_on:
+      - portfolio-service
+    ports:
+      - "${FRONTEND_PORT}:80"
+
   portfolio-service:
     build:
       context: ./backend/portfolio-service

@@ -33,7 +33,7 @@ infra/
 
 - [x] Fase 1: estructura inicial, documentación y dependencias locales.
 - [x] Fase 2: `portfolio-service` con Spring Boot y PostgreSQL.
-- [ ] Fase 3: frontend Vue 3 + Vite.
+- [x] Fase 3: frontend Vue 3 + Vite.
 - [ ] Fase 4: `contact-service` y publicación de eventos.
 - [ ] Fase 5: `notification-service` y MongoDB.
 - [ ] Fase 6: integración end-to-end.
@@ -86,6 +86,10 @@ Con el stack local arrancado, `portfolio-service` está disponible en `http://lo
 - `GET /api/experience`: consulta de experiencia.
 
 El contenido inicial se inserta automáticamente en PostgreSQL cuando las tablas están vacías.
+
+## Frontend local
+
+El frontend está disponible en `http://localhost:5173` cuando se ejecuta con Vite o en `http://localhost:5173` dentro de Docker Compose. Consume `/api/projects`, `/api/skills` y `/api/experience` mediante el proxy configurado, sin exponer la dirección interna del servicio al navegador.
 
 ## Licencia
 
