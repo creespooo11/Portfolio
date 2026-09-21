@@ -34,7 +34,7 @@ infra/
 - [x] Fase 1: estructura inicial, documentación y dependencias locales.
 - [x] Fase 2: `portfolio-service` con Spring Boot y PostgreSQL.
 - [x] Fase 3: frontend Vue 3 + Vite.
-- [ ] Fase 4: `contact-service` y publicación de eventos.
+- [x] Fase 4: `contact-service` y publicación de eventos.
 - [ ] Fase 5: `notification-service` y MongoDB.
 - [ ] Fase 6: integración end-to-end.
 - [ ] Fase 7: CI/CD.
@@ -86,6 +86,12 @@ Con el stack local arrancado, `portfolio-service` está disponible en `http://lo
 - `GET /api/experience`: consulta de experiencia.
 
 El contenido inicial se inserta automáticamente en PostgreSQL cuando las tablas están vacías.
+
+`contact-service` está disponible en `http://localhost:8082`:
+
+- `POST /api/contact`: recibe el envío del formulario de contacto (`name`, `email`, `message`). Valida los campos con Bean Validation y responde `400` con el detalle de cada error si algo falla.
+
+Si la validación es correcta, `contact-service` **no escribe en ninguna base de datos**: serializa el evento en JSON y lo publica en el topic Kafka `contact.created` (variable `KAFKA_TOPIC_CONTACT_CREATED`) usando un `KafkaTemplate` contra Redpanda. La respuesta al frontend es `202 Accepted`, porque en ese momento el evento solo se ha publicado, no procesado. `notification-service` (Fase 5) se suscribirá a ese topic para consumir el evento y enviar la notificación de forma asíncrona, desacoplando por completo la recepción del formulario de su procesamiento.
 
 ## Frontend local
 
