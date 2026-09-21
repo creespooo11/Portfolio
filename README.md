@@ -35,7 +35,7 @@ infra/
 - [x] Fase 2: `portfolio-service` con Spring Boot y PostgreSQL.
 - [x] Fase 3: frontend Vue 3 + Vite.
 - [x] Fase 4: `contact-service` y publicación de eventos.
-- [ ] Fase 5: `notification-service` y MongoDB.
+- [x] Fase 5: `notification-service` y MongoDB.
 - [ ] Fase 6: integración end-to-end.
 - [ ] Fase 7: CI/CD.
 - [ ] Fase 8: despliegue.
@@ -91,7 +91,21 @@ El contenido inicial se inserta automáticamente en PostgreSQL cuando las tablas
 
 - `POST /api/contact`: recibe el envío del formulario de contacto (`name`, `email`, `message`). Valida los campos con Bean Validation y responde `400` con el detalle de cada error si algo falla.
 
-Si la validación es correcta, `contact-service` **no escribe en ninguna base de datos**: serializa el evento en JSON y lo publica en el topic Kafka `contact.created` (variable `KAFKA_TOPIC_CONTACT_CREATED`) usando un `KafkaTemplate` contra Redpanda. La respuesta al frontend es `202 Accepted`, porque en ese momento el evento solo se ha publicado, no procesado. `notification-service` (Fase 5) se suscribirá a ese topic para consumir el evento y enviar la notificación de forma asíncrona, desacoplando por completo la recepción del formulario de su procesamiento.
+Si la validación es correcta, `contact-service` **no escribe en ninguna base de datos**: serializa el evento en JSON y lo publica en el topic Kafka `contact.created` (variable `KAFKA_TOPIC_CONTACT_CREATED`) usando un `KafkaTemplate` contra Redpanda. La respuesta al frontend es `202 Accepted`, porque en ese momento el evento solo se ha publicado, no procesado.
+
+`notification-service` está disponible en `http://localhost:8083`:
+
+- `GET /api/notifications?page=0&size=20`: lista paginada (orden por fecha de recepción descendente) de los mensajes de contacto procesados, tal y como quedaron guardados en MongoDB. Sin autenticación por ahora.
+
+### Flujo end-to-end del formulario de contacto
+
+1. El frontend envía `POST /api/contact` a `contact-service` con `name`, `email` y `message`.
+2. `contact-service` valida el payload y, si es correcto, publica un evento `ContactCreatedEvent` (JSON) en el topic Kafka `contact.created` y responde `202 Accepted` de inmediato, sin esperar a que nadie lo procese.
+3. `notification-service` está suscrito a ese topic con un `@KafkaListener`. Al recibir el evento:
+   - Guarda un documento en la colección `contact_logs` de MongoDB con estado `RECEIVED`, para no perder el evento aunque falle el paso siguiente.
+   - Intenta enviar un email de notificación a `NOTIFICATION_TARGET_EMAIL` vía `JavaMailSender`, usando `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` y `SMTP_PASSWORD`.
+   - Actualiza el mismo documento con el resultado: `EMAIL_SENT` si el envío real tuvo éxito, `EMAIL_FAILED` si SMTP estaba configurado pero el envío falló, o `EMAIL_SIMULATED` si no hay `SMTP_HOST`/`NOTIFICATION_TARGET_EMAIL` configurados en el entorno (caso por defecto en local, donde el intento se deja constancia en los logs de consola en vez de enviar un email real).
+4. `GET /api/notifications` permite comprobar en cualquier momento qué mensajes se han procesado y con qué estado, sin necesidad de acceder directamente a MongoDB.
 
 ## Frontend local
 

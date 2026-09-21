@@ -1,0 +1,42 @@
+server:
+  port: ${NOTIFICATION_SERVICE_PORT:8083}
+
+spring:
+  application:
+    name: notification-service
+  data:
+    mongodb:
+      host: ${MONGO_HOST:localhost}
+      port: ${MONGO_PORT:27017}
+      database: ${MONGO_INITDB_DATABASE:notifications}
+  kafka:
+    bootstrap-servers: ${REDPANDA_HOST:localhost}:${REDPANDA_PORT:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.javiercrespo.notification.notification
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.javiercrespo.notification.notification.ContactCreatedEvent
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+        transport:
+          protocol: smtp
+
+contact:
+  kafka:
+    topic: ${KAFKA_TOPIC_CONTACT_CREATED:contact.created}
+
+notification:
+  target-email: ${NOTIFICATION_TARGET_EMAIL:}
