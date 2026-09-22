@@ -53,8 +53,8 @@ class ProjectControllerTest {
         }
 
         assertThat(imageUrlsByName)
-                .containsEntry("VitSync", "vitsync.jpg")
-                .containsEntry("PowerSupps", "powersupps.jpg")
-                .containsEntry("Portfolio", "portfolio-placeholder.png");
+                .containsEntry("VitSync", "vitsync.webp")
+                .containsEntry("PowerSupps", "powersupps.webp")
+                .containsEntry("Portfolio", "portfolio-placeholder.webp");
     }
 }

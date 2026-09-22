@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node tmp-repro-headed.mjs)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5174 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique\")",
+      "Bash(powershell -Command \"Stop-Process -Id 25584 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(nohup npm run dev)",
+      "Bash(node tmp-final-repro.mjs)",
+      "Bash(npx playwright *)",
+      "Bash(powershell -Command \"Stop-Process -Id 28832 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(curl -s http://localhost:5173/api/skills --max-time 5)",
+      "Bash(node tmp-brave-instrumented.mjs 40)",
+      "Bash(node tmp-brave-samepage-reload.mjs 40)",
+      "Bash(node tmp-check-instrumentation.mjs)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique\")",
+      "Bash(powershell -Command \"Stop-Process -Id 9032 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(node tmp-sanity.mjs)",
+      "Bash(node tmp-sanity-isolation.mjs)",
+      "Bash(powershell -Command \"Stop-Process -Id 24036 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(node tmp-check-subtitle.mjs)",
+      "Bash(powershell -Command \"Stop-Process -Id 19056 -Force -ErrorAction SilentlyContinue\")",
+      "Bash(node tmp-final-shot.mjs)"
+    ]
+  }
+}

@@ -22,7 +22,7 @@ public class DataSeeder {
                         "Plataforma de gestion medica con historial, citas y chat en tiempo real. Desarrollada en equipo de 3, con el panel \"Mi Salud\" para pacientes.",
                         "https://github.com/Crespooo11",
                         "https://vitsync.es",
-                        "vitsync.jpg",
+                        "vitsync.webp",
                         1,
                         true));
                 projects.save(new Project(
@@ -30,7 +30,7 @@ public class DataSeeder {
                         "E-commerce de suplementos deportivos: WordPress, WooCommerce y Elementor, con SEO y automatizaciones n8n sincronizando pedidos con Miravia, Temu y TikTok Shop.",
                         "https://github.com/Crespooo11",
                         "https://powersupps.es",
-                        "powersupps.jpg",
+                        "powersupps.webp",
                         2,
                         true));
                 projects.save(new Project(
@@ -38,7 +38,7 @@ public class DataSeeder {
                         "Este propio portfolio: arquitectura de microservicios real con Spring Boot, Vue 3, Kafka, PostgreSQL y MongoDB.",
                         "https://github.com/Crespooo11/Portfolio",
                         null,
-                        "portfolio-placeholder.png",
+                        "portfolio-placeholder.webp",
                         3,
                         true));
             }
@@ -46,10 +46,13 @@ public class DataSeeder {
             if (skills.count() == 0) {
                 skills.save(new Skill("Java", "Backend", 1));
                 skills.save(new Skill("Spring Boot", "Backend", 2));
-                skills.save(new Skill("Vue.js", "Frontend", 3));
-                skills.save(new Skill("PostgreSQL", "Data", 4));
-                skills.save(new Skill("Docker", "DevOps", 5));
-                skills.save(new Skill("Kafka", "Messaging", 6));
+                skills.save(new Skill("JavaScript", "Frontend", 3));
+                skills.save(new Skill("Vue.js", "Frontend", 4));
+                skills.save(new Skill("PostgreSQL", "Data", 5));
+                skills.save(new Skill("MongoDB", "Data", 6));
+                skills.save(new Skill("Docker", "DevOps", 7));
+                skills.save(new Skill("Kafka", "Messaging", 8));
+                skills.save(new Skill("n8n", "Automation", 9));
             }
 
             if (experience.count() == 0) {

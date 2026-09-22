@@ -4,6 +4,7 @@ export interface Project {
   description: string
   repositoryUrl: string
   liveUrl: string | null
+  imageUrl: string | null
   displayOrder: number
   featured: boolean
 }
