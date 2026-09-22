@@ -427,16 +427,62 @@ h2 em {
 .contact-inner {
   min-height: 480px;
 }
-.contact-email {
-  display: inline-block;
-  margin-top: 55px;
-  color: var(--ink);
-  text-decoration: none;
-  border-bottom: 1px solid var(--ink);
+.contact-form {
+  display: grid;
+  gap: 22px;
+  max-width: 560px;
+  margin-top: 48px;
+}
+.form-field {
+  display: grid;
+  gap: 8px;
+}
+.form-field label {
   font:
-    500 1rem "DM Mono",
+    500 0.68rem "DM Mono",
     monospace;
-  padding-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.form-field input,
+.form-field textarea {
+  font: 1rem "Space Grotesk", sans-serif;
+  padding: 14px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  resize: vertical;
+}
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.form-field input:disabled,
+.form-field textarea:disabled {
+  opacity: 0.6;
+}
+.form-message {
+  margin: 0;
+  font:
+    500 0.78rem "DM Mono",
+    monospace;
+}
+.form-message-error {
+  color: #7a1f10;
+}
+.form-message-success {
+  color: #1f4d2c;
+}
+.contact-form .button {
+  border: none;
+  cursor: pointer;
+  width: fit-content;
+}
+.contact-form .button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .contact-footer {
   display: flex;
@@ -561,6 +607,10 @@ h2 em {
   }
   .contact-section {
     padding: 90px 0 25px;
+  }
+  .contact-form {
+    max-width: 100%;
+    margin-top: 36px;
   }
   .contact-footer {
     display: block;

@@ -6,6 +6,7 @@ services:
     restart: unless-stopped
     depends_on:
       - portfolio-service
+      - contact-service
     ports:
       - "${FRONTEND_PORT}:80"
 

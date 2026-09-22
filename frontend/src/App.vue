@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
-import { portfolioApi, type Experience, type Project, type Skill } from './api'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { ContactValidationError, contactApi, portfolioApi, type Experience, type Project, type Skill } from './api'
 
 const projects = ref<Project[]>([])
 const skills = ref<Skill[]>([])
@@ -8,6 +8,61 @@ const experience = ref<Experience[]>([])
 const loading = ref(true)
 const error = ref('')
 const activeFilter = ref('Todos')
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+const contactForm = reactive({
+  name: '',
+  email: '',
+  message: '',
+})
+const contactSubmitting = ref(false)
+const contactError = ref('')
+const contactSuccess = ref(false)
+
+function validateContactForm(): string | null {
+  if (!contactForm.name.trim()) return 'El nombre es obligatorio.'
+  if (!contactForm.email.trim() || !EMAIL_PATTERN.test(contactForm.email.trim())) {
+    return 'Introduce un email con un formato válido.'
+  }
+  if (!contactForm.message.trim()) return 'El mensaje es obligatorio.'
+  return null
+}
+
+async function submitContactForm() {
+  contactSuccess.value = false
+
+  const clientError = validateContactForm()
+  if (clientError) {
+    contactError.value = clientError
+    return
+  }
+
+  contactSubmitting.value = true
+  contactError.value = ''
+
+  try {
+    await contactApi.submit({
+      name: contactForm.name.trim(),
+      email: contactForm.email.trim(),
+      message: contactForm.message.trim(),
+    })
+    contactSuccess.value = true
+    contactForm.name = ''
+    contactForm.email = ''
+    contactForm.message = ''
+  } catch (err) {
+    if (err instanceof ContactValidationError) {
+      contactError.value = err.details.length
+        ? err.details.map((detail) => detail.message).join(' ')
+        : 'Revisa los datos del formulario e inténtalo de nuevo.'
+    } else {
+      contactError.value = 'No se ha podido enviar el mensaje. Comprueba tu conexión e inténtalo de nuevo.'
+    }
+  } finally {
+    contactSubmitting.value = false
+  }
+}
 const techStack = ['JAVA', 'SPRING BOOT', 'VUE.JS', 'POSTGRESQL', 'DOCKER', 'KAFKA']
 const tickerBlock = ref<HTMLElement | null>(null)
 const tickerCycleBlock = ref<HTMLElement | null>(null)
@@ -143,7 +198,61 @@ onUnmounted(() => {
 
       <section class="experience-section"><div class="section-wrap experience-grid"><div><p class="eyebrow">Dónde estoy ahora</p><h2>Experiencia &<br><em>aprendizaje.</em></h2></div><div v-if="loading" class="loading-state">Cargando trayectoria...</div><div v-else class="experience-list"><article v-for="item in experience" :key="item.id"><span class="period">{{ item.period }}</span><div><h3>{{ item.role }}</h3><p class="company">{{ item.company }}</p><p>{{ item.summary }}</p></div></article></div></div></section>
 
-      <section id="contact" class="contact-section"><div class="section-wrap contact-inner"><p class="eyebrow">¿Tienes una idea?</p><h2>Hagamos algo<br><em>que importe.</em></h2><a class="contact-email" href="mailto:crespomollj@gmail.com">crespomollj@gmail.com ↗</a><div class="contact-footer"><span>Javier Crespo · 2026</span><span>Diseñado y construido con curiosidad.</span></div></div></section>
+      <section id="contact" class="contact-section">
+        <div class="section-wrap contact-inner">
+          <p class="eyebrow">¿Tienes una idea?</p>
+          <h2>Hagamos algo<br><em>que importe.</em></h2>
+
+          <form class="contact-form" novalidate @submit.prevent="submitContactForm">
+            <div class="form-field">
+              <label for="contact-name">Nombre</label>
+              <input
+                id="contact-name"
+                v-model.trim="contactForm.name"
+                type="text"
+                name="name"
+                autocomplete="name"
+                :disabled="contactSubmitting"
+                required
+              />
+            </div>
+            <div class="form-field">
+              <label for="contact-email">Email</label>
+              <input
+                id="contact-email"
+                v-model.trim="contactForm.email"
+                type="email"
+                name="email"
+                autocomplete="email"
+                :disabled="contactSubmitting"
+                required
+              />
+            </div>
+            <div class="form-field">
+              <label for="contact-message">Mensaje</label>
+              <textarea
+                id="contact-message"
+                v-model.trim="contactForm.message"
+                name="message"
+                rows="5"
+                :disabled="contactSubmitting"
+                required
+              ></textarea>
+            </div>
+
+            <p v-if="contactError" class="form-message form-message-error" role="alert">{{ contactError }}</p>
+            <p v-if="contactSuccess" class="form-message form-message-success" role="status">
+              Gracias, tu mensaje se ha enviado correctamente. Te responderé en cuanto pueda.
+            </p>
+
+            <button type="submit" class="button button-dark" :disabled="contactSubmitting">
+              <span>{{ contactSubmitting ? 'Enviando…' : 'Enviar mensaje' }}</span>
+            </button>
+          </form>
+
+          <div class="contact-footer"><span>Javier Crespo · 2026</span><span>Diseñado y construido con curiosidad.</span></div>
+        </div>
+      </section>
     </main>
     <footer class="site-footer section-wrap"><span>JC.</span><span>Scroll to explore ↗</span></footer>
   </div>

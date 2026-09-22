@@ -20,6 +20,11 @@
 **/dist/
 **/.vite/
 
+# Playwright
+**/test-results/
+**/playwright-report/
+**/e2e/screenshots/
+
 # OS
 .DS_Store
 Thumbs.db

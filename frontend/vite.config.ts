@@ -7,6 +7,12 @@ export default defineConfig({
   server: {
     port: Number(process.env.FRONTEND_PORT ?? 5173),
     proxy: {
+      // More specific paths must be registered before the generic '/api'
+      // fallback below, since Vite matches proxy entries in insertion order.
+      '/api/contact': {
+        target: process.env.VITE_CONTACT_API_URL ?? 'http://localhost:8082',
+        changeOrigin: true,
+      },
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:8081',
         changeOrigin: true,
