@@ -18,19 +18,29 @@ public class DataSeeder {
         return args -> {
             if (projects.count() == 0) {
                 projects.save(new Project(
-                        "Portfolio fullstack con microservicios",
-                        "Portfolio profesional con Vue, Spring Boot, PostgreSQL, MongoDB y eventos Kafka.",
-                        "https://github.com/Crespooo11/Portfolio",
-                        null,
+                        "VitSync",
+                        "Plataforma de gestion medica con historial, citas y chat en tiempo real. Desarrollada en equipo de 3, con el panel \"Mi Salud\" para pacientes.",
+                        "https://github.com/Crespooo11",
+                        "https://vitsync.es",
+                        "vitsync.jpg",
                         1,
                         true));
                 projects.save(new Project(
-                        "Aplicaciones Java para gestión",
-                        "Aplicaciones desarrolladas durante la formación DAM con foco en diseño y persistencia.",
+                        "PowerSupps",
+                        "E-commerce de suplementos deportivos: WordPress, WooCommerce y Elementor, con SEO y automatizaciones n8n sincronizando pedidos con Miravia, Temu y TikTok Shop.",
                         "https://github.com/Crespooo11",
-                        null,
+                        "https://powersupps.es",
+                        "powersupps.jpg",
                         2,
-                        false));
+                        true));
+                projects.save(new Project(
+                        "Portfolio",
+                        "Este propio portfolio: arquitectura de microservicios real con Spring Boot, Vue 3, Kafka, PostgreSQL y MongoDB.",
+                        "https://github.com/Crespooo11/Portfolio",
+                        null,
+                        "portfolio-placeholder.png",
+                        3,
+                        true));
             }
 
             if (skills.count() == 0) {

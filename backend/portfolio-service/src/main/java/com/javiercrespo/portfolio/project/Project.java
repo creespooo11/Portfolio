@@ -32,6 +32,9 @@ public class Project {
     @Size(max = 500)
     private String liveUrl;
 
+    @Size(max = 300)
+    private String imageUrl;
+
     @NotNull
     private Integer displayOrder;
 
@@ -41,10 +44,15 @@ public class Project {
     }
 
     public Project(String name, String description, String repositoryUrl, String liveUrl, Integer displayOrder, boolean featured) {
+        this(name, description, repositoryUrl, liveUrl, null, displayOrder, featured);
+    }
+
+    public Project(String name, String description, String repositoryUrl, String liveUrl, String imageUrl, Integer displayOrder, boolean featured) {
         this.name = name;
         this.description = description;
         this.repositoryUrl = repositoryUrl;
         this.liveUrl = liveUrl;
+        this.imageUrl = imageUrl;
         this.displayOrder = displayOrder;
         this.featured = featured;
     }
@@ -58,6 +66,8 @@ public class Project {
     public void setRepositoryUrl(String repositoryUrl) { this.repositoryUrl = repositoryUrl; }
     public String getLiveUrl() { return liveUrl; }
     public void setLiveUrl(String liveUrl) { this.liveUrl = liveUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public Integer getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(Integer displayOrder) { this.displayOrder = displayOrder; }
     public boolean isFeatured() { return featured; }
