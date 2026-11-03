@@ -1,15 +1,26 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useIntroScene } from '../composables/useIntroScene'
+import { useStage } from '../composables/useStage'
 import { useScramble } from '../composables/useScramble'
 import { scrollToSection } from '../composables/useScrollTo'
+import { introStage } from '../world/stages/intro'
 import SystemClock from './SystemClock.vue'
 
 const sectionEl = ref<HTMLElement | null>(null)
-const canvasEl = ref<HTMLCanvasElement | null>(null)
 const hudEl = ref<SVGSVGElement | null>(null)
+const placed = ref(0)
+const total = ref(0)
 
-const { supported, ready, placed, total } = useIntroScene(canvasEl, sectionEl, hudEl)
+const { supported } = useStage(sectionEl, (ctx) =>
+  introStage({
+    section: sectionEl.value!,
+    hud: hudEl.value,
+    onPlaced(count, of) {
+      placed.value = count
+      total.value = of
+    },
+  })(ctx),
+)
 
 const manifestoText =
   'Construyo productos web de principio a fin: APIs en Java y Spring Boot, eventos con Kafka e interfaces en Vue.'
@@ -19,15 +30,14 @@ const manifestoText =
 const role = useScramble('Desarrollador web fullstack', 500, 700)
 const manifesto = useScramble(manifestoText, 800, 1300)
 
-const counter = computed(() => `${String(placed.value).padStart(2, '0')}/${total.value}`)
+const counter = computed(() => `${String(placed.value).padStart(2, '0')}/${total.value || '--'}`)
 const complete = computed(() => total.value > 0 && placed.value === total.value)
 </script>
 
 <template>
   <section id="intro" ref="sectionEl" class="intro">
     <div class="intro-stage">
-      <canvas v-if="supported" ref="canvasEl" :class="['intro-canvas', { 'is-ready': ready }]" aria-hidden="true"></canvas>
-      <div v-else class="intro-fallback" aria-hidden="true">JC<span>.</span></div>
+      <div v-if="!supported" class="intro-fallback" aria-hidden="true">JC<span>.</span></div>
 
       <svg ref="hudEl" class="intro-hud" aria-hidden="true"></svg>
 

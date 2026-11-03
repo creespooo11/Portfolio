@@ -16,18 +16,39 @@ Público: reclutadores y responsables técnicos (España, sector web y software)
 
 - Paleta cerrada: negro, blanco roto, gris y rojo.
 - El rojo es el único acento. Nunca es el fondo de una sección entera: solo
-  texto de énfasis, cifras, botones y overlays sobre imagen.
-- Las secciones alternan fondo oscuro y claro para dar ritmo. Oscuras: intro,
-  proyectos, experiencia y contacto. Claras: "Sobre mí" y "Stack".
+  texto de énfasis, botones y las piezas que brillan en las figuras 3D.
+- Toda la web es un mismo espacio oscuro en 3D (referencia: igloo.inc): ya
+  no hay secciones claras. Cada sección es una escena con su propia figura y
+  su texto como panel HUD encima.
 - Los valores exactos de color y tipografía están en `frontend/src/style.css`.
   Esa es la fuente de verdad; no definir colores nuevos.
 - Tipografía: titulares en Anton (gigantes y condensados), acento en serif
   cursiva roja en los títulos de sección, etiquetas y datos en monoespaciada
   (DM Mono) y texto corrido en Space Grotesk. Excepción: la portada (intro
   3D) usa solo Space Grotesk en sus textos pequeños, en minúsculas normales y
-  más grande; Javier no quiere la monoespaciada en mayúsculas ahí.
-- Las fotos de Javier van siempre tratadas en blanco y negro con un tinte rojo
-  sutil, nunca a color.
+  más grande; Javier no quiere la monoespaciada en mayúsculas ahí. Los
+  paneles HUD de las secciones siguen esa misma línea.
+- Sin fotos: Javier prefiere figuras 3D. No todas tienen que ser bloques
+  negros con núcleo rojo como la portada; cada sección lleva su diseño.
+
+## Escenas 3D (frontend/src/world)
+
+Un único canvas fijo detrás de toda la página; cada sección registra su
+escena y solo se dibuja la que está en el centro de la pantalla. Entre
+escenas se pasa por negro.
+
+- Portada: iniciales JC de bloques de piedra con núcleo rojo (ver Movimiento).
+- Sobre mí: esfera de cubitos que respira, con dos órbitas (una roja).
+- Proyectos: una figura por proyecto sobre un anillo rojo y una retícula de
+  puntos al fondo: VitSync = doble hélice (salud), PowerSupps = remolino de
+  cápsulas (suplementos), Portfolio = red geodésica con pulsos (microservicios).
+  Un proyecto nuevo sin figura propia usa un nudo en alambre.
+- Stack: giroscopio. Anillo metálico con un nodo por tecnología (con su
+  etiqueta) y anillos interiores girando en distintos ejes; la cámara lo
+  atraviesa al hacer scroll.
+- Formación (antes "Experiencia"; son estudios y títulos): placas de piedra con el centro, puesto y periodo grabados, a lo
+  largo de una línea de luz roja.
+- Contacto: el JC se vuelve a montar junto al formulario.
 
 ## Movimiento
 
@@ -36,8 +57,6 @@ por animaciones CSS caseras lo que GSAP ya resuelve.
 
 Elementos que se mantienen y por qué:
 
-- Lista de proyectos con imagen que aparece al pasar el ratón (referencia:
-  Liam Bennett): enseña la captura sin ocupar espacio fijo.
 - Frase gigante de fondo en "Sobre mí" que se desplaza en horizontal con el
   scroll (referencia: cipharvin.ro).
 - Panel de navegación flotante a la derecha, visible solo después de la intro.
@@ -54,6 +73,24 @@ Elementos que se mantienen y por qué:
 ## Fluidez
 
 La web tiene que ir muy fluida; es un requisito, no un extra.
+
+- Solo una escena 3D se dibuja a la vez; todas las luces son compartidas y
+  siempre están en la escena (añadir o quitar luces recompila shaders).
+- Cada escena se compila y se "calienta" (un render oculto) para que entrar
+  en ella por primera vez no dé un tirón, pero solo cuando ha terminado la
+  animación de entrada y en huecos libres del navegador: hacerlo durante la
+  entrada la hacía saltar.
+- Al recargar se empieza siempre arriba (salvo enlace a una sección), para
+  que siempre se vea la entrada.
+- En escritorio el texto de cada sección no se desplaza: está fijo y se
+  funde según la "presencia" de su escena, y en el cambio de sección la
+  cámara vuela (llega desde atrás, sale hacia delante). Nada de páginas
+  deslizándose entre escenas. En móvil el texto fluye normal.
+- El progreso de scroll que reciben las escenas va suavizado en el motor.
+- Piezas repetidas siempre con InstancedMesh; nada de cristal transparente
+  (MeshPhysicalMaterial con transmisión) ni texturas de fotos.
+- Medido en Brave recorriendo toda la web: 2,8 ms de media por frame, ningún
+  frame por encima de 20 ms.
 
 - Nada que se mueva en cada frame pasa por la reactividad de Vue: se escribe
   directamente en el DOM (transform, atributos SVG, variables CSS) o con
@@ -92,8 +129,6 @@ referencias:
 ## Referencias
 
 - Eric Cole (plantilla Framer): hero tipográfico enorme y estética de sistema.
-- Liam Bennett (plantilla Framer): imagen que aparece al pasar el ratón por la
-  lista de proyectos.
 - igloo.inc: mecánica de la intro (objeto 3D hecho de bloques que se
   ensamblan, juntas iluminadas, HUD numerado, textos de esquina tipo sistema).
   Se toma la mecánica, no su iglú, su paisaje ni su marca.

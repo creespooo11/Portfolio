@@ -9,7 +9,7 @@ import { expect, test } from '@playwright/test'
  * The name now lives in the 3D intro as its h1 and still runs no entrance
  * animation at all (the scrambled lines around it are separate elements).
  * This reloads the page repeatedly and asserts the full name is present and
- * painted immediately after every load, and that the intro's canvas mounts.
+ * painted immediately after every load, and that the shared 3D canvas mounts.
  */
 test('el nombre de la intro se muestra completo e inmediato en recargas repetidas', async ({ page }) => {
   // Every reload also boots the intro's WebGL scene, which headless
@@ -23,6 +23,6 @@ test('el nombre de la intro se muestra completo e inmediato en recargas repetida
 
     await expect(page.locator('.intro-name')).toHaveText('Javier Crespo Moll')
     await expect(page.locator('.intro-name')).toBeVisible()
-    await expect(page.locator('.intro-canvas, .intro-fallback')).toHaveCount(1)
+    await expect(page.locator('.world-canvas, .intro-fallback')).toHaveCount(1)
   }
 })

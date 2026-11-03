@@ -15,6 +15,10 @@ async function waitForPageReady(page: import('@playwright/test').Page) {
 }
 
 test.describe('Navegación flotante', () => {
+  // Each test boots the 3D world, which headless Chromium renders in
+  // software; with the wheel steps they sit right at the default 30s.
+  test.describe.configure({ timeout: 60_000 })
+
   test('está oculta sobre la intro y aparece al pasar de sección', async ({ page }) => {
     await waitForPageReady(page)
 

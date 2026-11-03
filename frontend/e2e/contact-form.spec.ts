@@ -19,9 +19,23 @@ async function waitForPageReady(page: import('@playwright/test').Page) {
   await page.waitForTimeout(1200)
 }
 
+/**
+ * Section content is fixed to the screen and only shown while its section
+ * is the active 3D stage, so Playwright's auto-scroll can't reach the form:
+ * scroll to the contact section first.
+ */
+async function goToContact(page: import('@playwright/test').Page) {
+  await page.evaluate(() => {
+    const section = document.querySelector('#contact')!
+    window.scrollTo(0, section.getBoundingClientRect().top + window.scrollY + 40)
+  })
+  await page.locator('#contact-name').waitFor({ state: 'visible' })
+}
+
 test.describe('Formulario de contacto', () => {
   test('envía un mensaje válido y muestra el mensaje de éxito', async ({ page }) => {
     await waitForPageReady(page)
+    await goToContact(page)
 
     const uniqueEmail = `ada.lovelace.${Date.now()}@example.com`
 
@@ -50,6 +64,7 @@ test.describe('Formulario de contacto', () => {
 
   test('muestra un error claro si el email no es válido, sin perder lo escrito', async ({ page }) => {
     await waitForPageReady(page)
+    await goToContact(page)
 
     await page.locator('#contact-name').fill('Grace Hopper')
     await page.locator('#contact-email').fill('esto-no-es-un-email')
@@ -82,16 +97,17 @@ test.describe('Animaciones (GSAP + Lenis)', () => {
     await expect(page.locator('.intro-name')).toHaveText('Javier Crespo Moll')
   })
 
-  test('el hover sobre un proyecto revela su imagen con el overlay rojo', async ({ page }) => {
+  test('al llegar a proyectos se muestra la ficha del primero junto a su figura 3D', async ({ page }) => {
     await waitForPageReady(page)
 
-    const firstProject = page.locator('.project-nav-item').first()
-    await firstProject.scrollIntoViewIfNeeded()
-    await firstProject.hover()
-
-    // Confirms the GSAP tween actually reached its target state, not just
-    // that the element exists in the DOM (which would pass even at opacity 0).
-    await expect(page.locator('.project-preview-frame')).toHaveCSS('opacity', '1', { timeout: 3000 })
-    await expect(page.locator('.project-preview-overlay')).toBeAttached()
+    // The panels are faded in by the 3D stage as the camera reaches each
+    // project, so this checks the stage actually drove it to full opacity.
+    await page.evaluate(() => {
+      const section = document.querySelector('#work')!
+      window.scrollTo(0, section.getBoundingClientRect().top + window.scrollY + 40)
+    })
+    const firstPanel = page.locator('.project-panel').first()
+    await expect(firstPanel).toHaveCSS('opacity', '1', { timeout: 8000 })
+    await expect(firstPanel.locator('.panel-title')).not.toBeEmpty()
   })
 })
