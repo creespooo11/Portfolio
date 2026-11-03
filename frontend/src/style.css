@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
-
 :root {
   font-family: "Space Grotesk", sans-serif;
   font-synthesis: none;
@@ -9,9 +7,6 @@
   --muted: rgba(245, 245, 240, 0.6);
   --red: #c8102e;
   --line: rgba(245, 245, 240, 0.16);
-  /* Intensity of the hero teselas' red tint (multiply-blended, see
-     .hero-tile-tint). Single knob to darken/lighten it. */
-  --tile-tint: 0.15;
 }
 * {
   box-sizing: border-box;
@@ -28,7 +23,9 @@ body {
   color: var(--fg);
 }
 .site-shell {
-  overflow-x: hidden;
+  /* clip, not hidden: hidden would make this a scroll container and break
+     the intro's position: sticky stage. */
+  overflow-x: clip;
 }
 .section-wrap {
   width: min(1180px, calc(100% - 64px));
@@ -48,18 +45,212 @@ body {
   color: var(--fg);
 }
 
-/* ---------- Topbar ---------- */
-.topbar {
-  height: 82px;
+/* ---------- Intro (3D monogram) ---------- */
+/* Taller than the viewport: the stage stays pinned while the extra height
+   is scrolled, and that scroll drives the monogram breaking apart.
+   --intro-progress (0-1) is written by useIntroScene every frame. */
+.intro {
+  --intro-progress: 0;
+  position: relative;
+  height: 175vh;
+  background: #070707;
+}
+.intro-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  contain: strict;
+}
+.intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.intro-canvas.is-ready {
+  opacity: 1;
+}
+.intro-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 400 clamp(8rem, 30vw, 22rem) / 1 "Anton", sans-serif;
+  color: var(--fg);
+}
+.intro-fallback span {
+  color: var(--red);
+}
+.intro-hud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0;
+}
+.intro-hud polyline,
+.intro-hud path {
+  fill: none;
+  stroke: rgba(245, 245, 240, 0.55);
+  stroke-width: 1;
+}
+.intro-hud text {
+  fill: var(--fg);
+  font:
+    500 13px "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.01em;
+  white-space: pre;
+}
+.intro-chrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: max(0, 1 - var(--intro-progress) * 5);
+}
+.intro-corner {
+  position: absolute;
+  display: grid;
+  gap: 18px;
+  pointer-events: auto;
+}
+.intro-corner--tl {
+  top: clamp(24px, 4vw, 48px);
+  left: clamp(20px, 3.5vw, 52px);
+}
+.intro-corner--tr {
+  top: clamp(32px, 4.6vw, 58px);
+  right: clamp(20px, 3.5vw, 52px);
+  justify-items: end;
+  text-align: right;
+}
+.intro-corner--bl {
+  bottom: clamp(24px, 4vw, 48px);
+  left: clamp(20px, 3.5vw, 52px);
+  gap: 10px;
+}
+.intro-corner--br {
+  bottom: clamp(24px, 4vw, 48px);
+  right: clamp(20px, 3.5vw, 52px);
+}
+.intro-brand {
+  font: 400 clamp(2.8rem, 4.6vw, 4.2rem) / 0.9 "Anton", sans-serif;
+  color: var(--fg);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.intro-brand span {
+  color: var(--red);
+}
+.intro-name {
+  margin: 0;
+  font:
+    600 clamp(1.15rem, 1.55vw, 1.45rem) / 1.2 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.intro-role {
+  margin: 4px 0 0;
+  font:
+    400 clamp(0.95rem, 1.1vw, 1.05rem) / 1.4 "Space Grotesk",
+    sans-serif;
+  color: var(--muted);
+}
+.intro-manifesto {
+  margin: 0;
+  max-width: 30ch;
+  font:
+    400 clamp(1rem, 1.3vw, 1.2rem) / 1.45 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.intro-count {
+  margin: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: min(1280px, calc(100% - 64px));
-  margin: auto;
-  border-bottom: 1px solid var(--line);
-  position: relative;
-  z-index: 20;
+  gap: 10px;
+  font:
+    500 0.85rem / 1 "Space Grotesk",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
+.intro-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: intro-blink 0.9s steps(2, start) infinite;
+}
+.intro-status.is-complete {
+  background: #67b56e;
+  box-shadow: 0 0 0 3px rgba(103, 181, 110, 0.18);
+  animation: none;
+}
+.intro-enter {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font:
+    500 1.05rem / 1.3 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.intro-enter span {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--red);
+  animation: intro-nudge 1.6s ease-in-out infinite;
+}
+.intro-enter:hover,
+.intro-enter:focus-visible {
+  color: var(--red);
+}
+.intro .system-clock {
+  font:
+    500 0.85rem "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+@keyframes intro-blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes intro-nudge {
+  50% {
+    transform: translateY(4px);
+  }
+}
+@media (max-width: 760px) {
+  .intro-corner--tr {
+    top: auto;
+    bottom: clamp(96px, 22vw, 140px);
+    right: auto;
+    left: clamp(20px, 3.5vw, 52px);
+    justify-items: start;
+    text-align: left;
+  }
+  .intro-corner--br {
+    display: none;
+  }
+}
+
+/* ---------- Brand + links ---------- */
 .brand {
   font-weight: 700;
   font-size: 1.35rem;
@@ -70,30 +261,12 @@ body {
 .brand span {
   color: var(--red);
 }
-.topbar nav {
-  display: flex;
-  gap: 32px;
-}
 nav a,
-.availability,
 .text-link {
   color: var(--fg);
   text-decoration: none;
   font-size: 0.77rem;
   font-family: "DM Mono", monospace;
-}
-.availability {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.availability i {
-  height: 7px;
-  width: 7px;
-  background: #67b56e;
-  border-radius: 50%;
-  display: block;
-  box-shadow: 0 0 0 3px rgba(103, 181, 110, 0.18);
 }
 .text-link {
   border-bottom: 1px solid var(--fg);
@@ -113,10 +286,10 @@ nav a,
   gap: 4px;
   padding: 10px;
   border-radius: 999px;
-  background: rgba(10, 10, 10, 0.55);
+  /* Opaque instead of backdrop-filter: a blur behind a fixed element is
+     re-rendered on every scrolled frame and is a common source of jank. */
+  background: rgba(10, 10, 10, 0.9);
   border: 1px solid rgba(245, 245, 240, 0.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .floating-nav-link {
   writing-mode: vertical-rl;
@@ -219,183 +392,6 @@ nav a,
   cursor: not-allowed;
 }
 
-/* ---------- Hero ---------- */
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding-top: 110px;
-  overflow: hidden;
-}
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  background: var(--bg);
-}
-/* Low-opacity, static (unanimated) noise so the flat black isn't
-   completely dead; feTurbulence generated inline, no external asset. */
-.hero-grain {
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-/* Same red as the rest of the hero's overlays (rgba equivalent of the
-   --red token), just a soft static glow instead of a flat wash. */
-.hero-glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 55% 45% at 50% 42%, rgba(200, 16, 46, 0.18) 0%, rgba(200, 16, 46, 0) 70%);
-  pointer-events: none;
-}
-.hero-system {
-  position: relative;
-  z-index: 2;
-  align-self: flex-end;
-  margin: 0 max(32px, 3vw);
-}
-
-/* ---------- Hero teselas (Pryzm-style scattered composition) ---------- */
-.hero-tiles {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-}
-.hero-tile {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  will-change: transform;
-}
-.hero-tile-frame {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-}
-.hero-tile-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-/* Same treatment DESIGN.md already uses for Javier's own photos
-   elsewhere (see .about-media img): grayscale + a touch of contrast. */
-.hero-tile-image--photo {
-  filter: grayscale(1) contrast(1.05);
-}
-/* Same treatment ProjectsSection uses for its own preview image. */
-.hero-tile-image--project {
-  filter: grayscale(1) brightness(0.75) contrast(1.05);
-}
-/* Multiply (not normal-blend) so bright/white areas of the photo darken
-   toward red instead of averaging toward pink; black stays black. */
-.hero-tile-tint {
-  position: absolute;
-  inset: 0;
-  background: var(--red);
-  opacity: var(--tile-tint);
-  mix-blend-mode: multiply;
-  pointer-events: none;
-}
-.hero-tile-label {
-  margin: 0;
-  font:
-    500 0.62rem "DM Mono",
-    monospace;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.hero-copy {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 40px;
-  padding: 60px max(32px, 3vw) 70px;
-}
-.hero-copy-left {
-  flex: 1 1 480px;
-  min-width: 0;
-  max-width: 20ch;
-}
-.hero-copy-right {
-  flex: 0 1 460px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 28px;
-}
-.hero-name {
-  margin: 0;
-  font-family: "Anton", sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  line-height: 0.86;
-  letter-spacing: 0;
-  font-size: clamp(3.4rem, 12vw, 10.5rem);
-  color: #fff;
-}
-.hero-subtitle {
-  margin: 0;
-  font:
-    500 0.85rem "DM Mono",
-    monospace;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.hero-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px 28px;
-}
-.stat-item {
-  flex: 0 0 auto;
-  min-width: 100px;
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.stat-value {
-  font-family: "Anton", sans-serif;
-  font-weight: 400;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  color: var(--red);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.stat-label {
-  font:
-    500 0.6rem "DM Mono",
-    monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 /* ---------- Marquee (generic) ---------- */
 .marquee {
   overflow: hidden;
@@ -422,15 +418,6 @@ nav a,
   visibility: hidden;
   pointer-events: none;
   left: -9999px;
-}
-.hero-marquee {
-  background: var(--red);
-  color: var(--fg);
-  font:
-    500 0.82rem "DM Mono",
-    monospace;
-  letter-spacing: 0.02em;
-  padding: 20px 0;
 }
 .footer-marquee {
   color: var(--red);
@@ -497,6 +484,7 @@ h2 em,
   border-top: 1px solid var(--line);
 }
 .huge-phrase {
+  will-change: transform;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -606,6 +594,7 @@ h2 em,
   height: 0;
   pointer-events: none;
   z-index: 5;
+  will-change: transform;
 }
 .project-preview-frame {
   position: absolute;
@@ -869,9 +858,6 @@ h2 em,
 
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
-  .hero-copy-right {
-    flex-basis: 100%;
-  }
   .about-grid {
     grid-template-columns: 1fr;
   }
@@ -881,62 +867,8 @@ h2 em,
 }
 
 @media (max-width: 760px) {
-  .section-wrap,
-  .topbar {
+  .section-wrap {
     width: calc(100% - 36px);
-  }
-  .topbar {
-    height: 70px;
-  }
-  .topbar nav {
-    display: none;
-  }
-  .availability {
-    font-size: 0.58rem;
-  }
-
-  .hero {
-    padding-top: 90px;
-  }
-  .hero-system {
-    margin: 0 18px;
-  }
-  .hero-system .system-clock-label {
-    display: none;
-  }
-  /* No room for the scattered desktop composition on a phone: the tiles
-     move into normal document flow as a compact 2-column grid, right
-     after the clock and before the name, instead of an absolute overlay
-     the copy would have to dodge. */
-  .hero-tiles {
-    position: relative;
-    inset: auto;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin: 18px 18px 0;
-  }
-  .hero-tile {
-    position: relative;
-  }
-  .hero-tile-frame {
-    aspect-ratio: 4 / 3;
-  }
-  .hero-copy {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 24px;
-    padding: 32px 18px 50px;
-  }
-  .hero-copy-left,
-  .hero-copy-right {
-    flex-basis: auto;
-    max-width: none;
-    width: 100%;
-  }
-  .hero-stats {
-    gap: 16px 24px;
   }
 
   .about-section,

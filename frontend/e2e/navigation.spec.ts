@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 /**
- * The floating pill nav is driven by a ScrollTrigger tied to the hero's own
+ * The floating pill nav is driven by a ScrollTrigger tied to the intro's own
  * bounds, and its links scroll via Lenis's own scrollTo (not the native
  * scrollIntoView/scrollTo, which Lenis silently overrides once it takes
  * over the page — see the frontend README). So this suite drives scroll
@@ -10,12 +10,12 @@ import { expect, test } from '@playwright/test'
  */
 async function waitForPageReady(page: import('@playwright/test').Page) {
   await page.goto('/')
-  await page.waitForSelector('.hero-name', { state: 'visible' })
+  await page.waitForSelector('.intro-name', { state: 'visible' })
   await page.waitForTimeout(1200)
 }
 
 test.describe('Navegación flotante', () => {
-  test('está oculta sobre el hero y aparece al pasar de sección', async ({ page }) => {
+  test('está oculta sobre la intro y aparece al pasar de sección', async ({ page }) => {
     await waitForPageReady(page)
 
     await expect(page.locator('.floating-nav')).toHaveCSS('opacity', '0')

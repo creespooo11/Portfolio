@@ -4,8 +4,8 @@ import { gsap } from '../lib/gsap'
 import { scrollToSection } from '../composables/useScrollTo'
 
 /**
- * Pill-shaped, fixed nav docked to the right edge. Hidden over the hero on
- * purpose (the hero already owns that screen), it fades/slides in once the
+ * Pill-shaped, fixed nav docked to the right edge. Hidden over the intro on
+ * purpose (the intro already owns that screen), it fades/slides in once the
  * visitor scrolls past it and stays put for the rest of the page.
  */
 const links = [
@@ -25,7 +25,7 @@ onMounted(() => {
     duration: 0.6,
     ease: 'power2.out',
     scrollTrigger: {
-      trigger: '.hero',
+      trigger: '.intro',
       start: 'bottom top',
       toggleActions: 'play none none reverse',
     },

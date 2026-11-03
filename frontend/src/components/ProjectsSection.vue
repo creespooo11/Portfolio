@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { gsap } from '../lib/gsap'
 import { useScrollReveal } from '../composables/useScrollReveal'
 import SectionLabel from './SectionLabel.vue'
@@ -40,14 +40,27 @@ const listEl = ref<HTMLElement | null>(null)
 // overlay has no visibility of its own) so they can never drift out of
 // sync or show up before/without an actual hover.
 const previewFrameEl = ref<HTMLElement | null>(null)
-const cursor = ref({ x: 0, y: 0 })
+const previewEl = ref<HTMLElement | null>(null)
 const currentImage = ref<string | null>(null)
 let previewTween: gsap.core.Tween | null = null
+
+// The preview follows the cursor through gsap.quickTo (a slightly eased
+// transform written straight to the element), not reactive state, so
+// moving the mouse never triggers a Vue re-render.
+let moveX: ((value: number) => void) | null = null
+let moveY: ((value: number) => void) | null = null
+
+onMounted(() => {
+  if (!previewEl.value) return
+  moveX = gsap.quickTo(previewEl.value, 'x', { duration: 0.35, ease: 'power3.out' })
+  moveY = gsap.quickTo(previewEl.value, 'y', { duration: 0.35, ease: 'power3.out' })
+})
 
 function onMouseMove(event: MouseEvent) {
   const rect = listEl.value?.getBoundingClientRect()
   if (!rect) return
-  cursor.value = { x: event.clientX - rect.left, y: event.clientY - rect.top }
+  moveX?.(event.clientX - rect.left)
+  moveY?.(event.clientY - rect.top)
 }
 
 function onEnter(project: Project) {
@@ -98,9 +111,9 @@ onUnmounted(() => {
           <span class="project-nav-tag">{{ tagFor(project.name) }}</span>
         </a>
 
-        <div class="project-preview" :style="{ transform: `translate(${cursor.x}px, ${cursor.y}px)` }">
+        <div ref="previewEl" class="project-preview">
           <div v-if="currentImage" ref="previewFrameEl" class="project-preview-frame">
-            <img :src="currentImage" alt="" class="project-preview-image" />
+            <img :src="currentImage" alt="" class="project-preview-image" decoding="async" />
             <div class="project-preview-overlay"></div>
           </div>
         </div>

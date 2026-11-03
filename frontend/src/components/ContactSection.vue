@@ -13,7 +13,7 @@ const { form, submitting, error, success, submit } = useContactForm()
 <template>
   <section id="contact" ref="sectionEl" class="contact-section">
     <div class="contact-bg">
-      <img :src="contactPhoto" alt="" />
+      <img :src="contactPhoto" alt="" loading="lazy" decoding="async" />
       <div class="contact-bg-overlay"></div>
     </div>
 

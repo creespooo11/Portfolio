@@ -60,7 +60,13 @@ onUnmounted(() => {
     <HugePhrase text="PROGRAMADOR" :trigger-el="sectionEl" />
     <div class="section-wrap about-grid">
       <div class="about-media">
-        <img ref="imageEl" :src="aboutPhoto" alt="Javier Crespo Moll en la Plaza de San Pedro, Roma" />
+        <img
+          ref="imageEl"
+          :src="aboutPhoto"
+          alt="Javier Crespo Moll en la Plaza de San Pedro, Roma"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
       <div ref="textEl" class="about-copy">
         <SectionLabel text="SOBRE MÍ" :repeat="6" :trigger-el="sectionEl" />
