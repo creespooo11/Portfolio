@@ -40,7 +40,13 @@ export interface WorldContext {
 export interface Frame {
   dt: number
   time: number
-  /** 0-1 through the section's pinned (sticky) stretch. */
+  /**
+   * 0-1 through the section: from the moment it appears (its top reaches
+   * the middle of the screen) to the moment it leaves (its bottom does),
+   * so the stage responds to scroll from its very first frame. Stages with
+   * `pinned` get the old 0-1 over just the stretch where the section fills
+   * the screen.
+   */
   progress: number
   /** 0 at the section's edges (where the view cuts through black), 1 inside. */
   presence: number
@@ -57,6 +63,11 @@ export interface Frame {
 
 export interface Stage {
   group: THREE.Group
+  /**
+   * Progress over the section's full-screen stretch only (the intro, which
+   * starts at the very top of the page and has no entrance to animate).
+   */
+  pinned?: boolean
   /** Owns the camera pose and its own animation for the frame. */
   update(frame: Frame, ctx: WorldContext): void
   /** Called once when the stage leaves the screen (hide HUD, etc.). */
@@ -419,7 +430,9 @@ class World {
         if (distance > 0 && !active) {
           active = entry
           presence = smoothstep(0, vh * 0.14, distance)
-          progress = clamp01(-top / Math.max(1, entry.height - vh))
+          progress = entry.stage?.pinned
+            ? clamp01(-top / Math.max(1, entry.height - vh))
+            : clamp01(fromTop / Math.max(1, entry.height))
           entering = fromTop < fromBottom
           setPresence(entry, presence)
         } else {

@@ -19,7 +19,11 @@ interface ProjectsOptions {
  */
 export function projectFocus(progress: number, count: number) {
   if (count <= 1) return 0
-  const f = progress * (count - 1)
+  // Progress now spans the whole section, entrance and exit included: the
+  // first project holds a moment on arrival and the last one is reached
+  // before the section starts to leave.
+  const travel = Math.min(1, Math.max(0, (progress - 0.13) / 0.75))
+  const f = travel * (count - 1)
   const base = Math.min(count - 2, Math.floor(f))
   const t = f - base
   return base + t * 0.6 + (0.5 - 0.5 * Math.cos(Math.PI * t)) * 0.4
@@ -178,7 +182,11 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
         // Aimed at the centre line (figures sit left of it), so they stay in
         // the left half, clear of the panels, the whole way.
         const between = Math.sin(focus * Math.PI)
-        const cameraZ = focusZ + distance
+        // While the section arrives, scroll brings the camera in towards the
+        // first project (so the entrance moves with the scroll); the trip to
+        // the next one starts once it's fully on screen.
+        const approach = 1 - smoothstep(0, 0.13, progress)
+        const cameraZ = focusZ + distance + approach * 5
         camera.position.set(between * 1.2 + pointer.x * 0.5, 0.6 + Math.abs(between) * 0.6 - pointer.y * 0.3, cameraZ)
         camera.lookAt(between * 0.6, 0, cameraZ - distance - 2)
         camera.rotateZ(-between * 0.06)

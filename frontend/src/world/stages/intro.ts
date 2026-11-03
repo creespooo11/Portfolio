@@ -63,6 +63,9 @@ export function introStage({ section, hud, onPlaced }: IntroOptions): StageFacto
 
     return {
       group,
+      // The intro is the top of the page: no entrance, and its scroll
+      // choreography is tuned to the full-screen stretch.
+      pinned: true,
       update(frame) {
         if (!started) {
           // The build-in starts on the first frame actually shown, not when
