@@ -25,15 +25,17 @@ export function contactStage(): StageFactory {
       group,
       update(frame) {
         const { time, ambient, pointer, presence } = frame
-        if (!started && presence > 0.5) {
+        // Bricks start flying in the moment the stage shows, so they're
+        // already in motion while it fades in (not still, then a jolt).
+        if (!started && presence > 0) {
           started = true
           if (!reducedMotion) {
             tweens = build.map((state, i) =>
               gsap.to(state, {
                 value: 1,
-                duration: 1.6,
+                duration: 1.5,
                 ease: 'expo.out',
-                delay: monogram.pieces[i].row * 0.1 + Math.random() * 0.25,
+                delay: monogram.pieces[i].row * 0.06 + Math.random() * 0.15,
               }),
             )
           }
@@ -50,10 +52,12 @@ export function contactStage(): StageFactory {
         monogram.setGlow(glow)
 
         const portrait = camera.aspect < 1
-        const distance = portrait ? 40 : 30
+        // Layout is sized for the base distance; the camera pushes in from it.
+        const baseDistance = portrait ? 40 : 30
+        const distance = baseDistance - frame.progress * 5
         const viewTan = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-        const viewW = distance * viewTan * camera.aspect
-        const viewH = distance * viewTan
+        const viewW = baseDistance * viewTan * camera.aspect
+        const viewH = baseDistance * viewTan
         // Desktop: monogram on the right half, form on the left.
         const scale = portrait ? Math.min(0.62, (viewW * 0.8) / 13.5) : Math.min(0.8, (viewW * 0.34) / 13.5)
         holder.scale.setScalar(scale)

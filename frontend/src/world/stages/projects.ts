@@ -2,7 +2,8 @@ import { smoothstep } from '../bricks'
 import { projectFigure } from '../figures'
 import type { StageFactory } from '../world'
 
-export const PROJECT_SPACING = 16
+// Projects sit one behind another; the camera flies forward through them.
+export const PROJECT_SPACING = 15
 
 interface ProjectsOptions {
   names: string[]
@@ -12,21 +13,24 @@ interface ProjectsOptions {
 }
 
 /**
- * Where the camera is along the row of projects for a scroll progress:
- * it dwells on each project and glides between them, instead of sliding
- * at constant speed (gives time to read each one).
+ * Where the camera is along the row of projects for a scroll progress.
+ * Never stops: mostly linear (every bit of scroll moves the camera, like
+ * the intro) with a gentle slow-down over each project so it can be read.
  */
 export function projectFocus(progress: number, count: number) {
   if (count <= 1) return 0
   const f = progress * (count - 1)
   const base = Math.min(count - 2, Math.floor(f))
-  return base + smoothstep(0.3, 0.7, f - base)
+  const t = f - base
+  return base + t * 0.6 + (0.5 - 0.5 * Math.cos(Math.PI * t)) * 0.4
 }
 
 /**
  * "Proyectos": each project gets its own 3D figure (see figures.ts) floating
- * over a thin red ring, with a dotted grid far behind. Scrolling moves the
- * camera from figure to figure; HUD lines tie the one in focus to its panel.
+ * over a thin red ring, one behind another in depth, with a dotted grid far
+ * behind. Scrolling flies the camera forward from figure to figure (the
+ * next one is always visible ahead in the fog); HUD lines tie the one in
+ * focus to its panel.
  */
 export function projectsStage({ names, panels, callouts }: ProjectsOptions): StageFactory {
   return (ctx) => {
@@ -58,9 +62,8 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
       return { holder, figure, phase: i * 1.7 }
     })
 
-    // Dotted grid far behind, spanning the whole row of projects.
-    const span = (count - 1) * PROJECT_SPACING + 90
-    const cols = Math.round(span / 1.5)
+    // Dotted grid far behind; it travels with the camera.
+    const cols = 60
     const rows = 26
     const gridPositions = new Float32Array(cols * rows * 3)
     for (let c = 0; c < cols; c++) {
@@ -68,7 +71,7 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
         const k = (c * rows + r) * 3
         gridPositions[k] = -45 + c * 1.5
         gridPositions[k + 1] = (r - rows / 2) * 1.5
-        gridPositions[k + 2] = -16
+        gridPositions[k + 2] = 0
       }
     }
     const gridGeometry = new THREE.BufferGeometry()
@@ -99,11 +102,11 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
         const focus = projectFocus(progress, count)
         const portrait = camera.aspect < 1
         const viewTan = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-        const distance = portrait ? 19 : 14
+        const distance = portrait ? 19 : 13
         const viewW = distance * viewTan * camera.aspect
         const viewH = distance * viewTan
         // Desktop: figures sit left of centre, panels on the right.
-        const offsetX = portrait ? 0 : -viewW * 0.17
+        const offsetX = portrait ? 0 : -viewW * 0.21
         const offsetY = portrait ? viewH * 0.17 : -0.6
 
         if (anchorWidth !== width) {
@@ -122,10 +125,18 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
           const distanceToFocus = Math.abs(focus - i)
           const near = 1 - smoothstep(0, 0.9, distanceToFocus)
           // Only the figures near the camera are drawn and animated.
-          item.holder.visible = distanceToFocus < 1.2
+          // The one in focus plus the next ahead (visible in the fog).
+          item.holder.visible = i - focus > -0.9 && i - focus < 1.9
           if (!item.holder.visible) return
           item.figure.update(time + item.phase, ambient)
-          item.holder.position.set(i * PROJECT_SPACING + offsetX, offsetY + Math.sin(time * 0.5 + item.phase) * 0.15 * ambient, 0)
+          // Alternating slightly left/right so the next one isn't hidden
+          // straight behind the current one.
+          const side = portrait ? 0 : (i % 2 ? 0.9 : -0.9)
+          item.holder.position.set(
+            offsetX + side,
+            offsetY + Math.sin(time * 0.5 + item.phase) * 0.15 * ambient,
+            -i * PROJECT_SPACING,
+          )
           item.holder.rotation.y = pointer.x * 0.25 + (i - focus) * 0.9 + Math.sin(time * 0.3 + item.phase) * 0.25 * ambient
           item.holder.rotation.x = -pointer.y * 0.1
           item.holder.scale.setScalar((portrait ? 0.7 : 0.86) * (0.8 + near * 0.2))
@@ -156,14 +167,22 @@ export function projectsStage({ names, panels, callouts }: ProjectsOptions): Sta
           }
         })
 
-        const focusX = focus * PROJECT_SPACING
-        ctx.lights.accent.position.set(focusX + offsetX, offsetY - 2.4, 2)
+        const focusZ = -focus * PROJECT_SPACING
+        ctx.lights.accent.position.set(offsetX, offsetY - 2.4, focusZ + 2)
         ctx.lights.accent.intensity = 12
-        ctx.lights.key.position.set(focusX - 6, 8, 10)
-        ctx.lights.rim.position.set(focusX + 8, 3, -6)
+        ctx.lights.key.position.set(-6, 8, focusZ + 10)
+        ctx.lights.rim.position.set(8, 3, focusZ - 6)
 
-        camera.position.set(focusX + pointer.x * 0.5, 0.6 - pointer.y * 0.3, distance)
-        camera.lookAt(focusX, 0, 0)
+        // Flying forward, the camera banks out to the side between projects,
+        // so the path is a gentle S-curve rather than a straight track.
+        // Aimed at the centre line (figures sit left of it), so they stay in
+        // the left half, clear of the panels, the whole way.
+        const between = Math.sin(focus * Math.PI)
+        const cameraZ = focusZ + distance
+        camera.position.set(between * 1.2 + pointer.x * 0.5, 0.6 + Math.abs(between) * 0.6 - pointer.y * 0.3, cameraZ)
+        camera.lookAt(between * 0.6, 0, cameraZ - distance - 2)
+        camera.rotateZ(-between * 0.06)
+        grid.position.z = cameraZ - 30
         frame.fogDensity = 0.018
       },
       hide() {

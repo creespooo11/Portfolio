@@ -12,10 +12,7 @@ const panelEls = ref<HTMLElement[]>([])
 
 const { supported } = useStage(
   sectionEl,
-  experienceStage({
-    entries: props.experience.map((item) => ({ title: item.company, subtitle: item.role, tag: item.period })),
-    panels: () => panelEls.value,
-  }),
+  experienceStage({ count: props.experience.length, panels: () => panelEls.value }),
 )
 </script>
 

@@ -277,3 +277,104 @@ export function projectFigure(ctx: WorldContext, name: string): Figure {
       return knot(ctx)
   }
 }
+
+/**
+ * "Formación": an open book whose pages keep turning on their own, a red
+ * bookmark ribbon hanging from the spine, and a graduation cap floating
+ * above it, tassel glowing red.
+ */
+export function studyBook(ctx: WorldContext): Figure {
+  const { THREE, kit } = ctx
+  const own = trackDisposables()
+  const group = new THREE.Group()
+  const book = new THREE.Group()
+  group.add(book)
+
+  const coverMaterial = own.add(new THREE.MeshStandardMaterial({ color: 0x24252b, roughness: 0.45, metalness: 0.6 }))
+  const pageMaterial = own.add(
+    new THREE.MeshStandardMaterial({ color: 0x9c9c98, roughness: 0.75, metalness: 0, side: THREE.DoubleSide }),
+  )
+  const glow = own.add(kit.glowMaterial())
+  kit.setGlow(glow, 1.4)
+
+  // Covers and page blocks hinge on the spine (x = 0): geometry is shifted
+  // so it rotates around its inner edge.
+  const width = 1.75
+  const height = 2.4
+  const coverGeometry = own.add(new THREE.BoxGeometry(width, height, 0.07))
+  coverGeometry.translate(width / 2, 0, 0)
+  const blockGeometry = own.add(new THREE.BoxGeometry(width - 0.1, height - 0.12, 0.16))
+  blockGeometry.translate((width - 0.1) / 2, 0, 0.11)
+  for (const side of [1, -1]) {
+    const hinge = new THREE.Group()
+    // Covers tilt their outer edges towards the viewer (a V, spine at the
+    // back), like a book lying open in front of you.
+    hinge.rotation.y = side === 1 ? -0.22 : Math.PI + 0.22
+    hinge.add(new THREE.Mesh(coverGeometry, coverMaterial))
+    const block = new THREE.Mesh(blockGeometry, pageMaterial)
+    block.scale.z = side
+    hinge.add(block)
+    book.add(hinge)
+  }
+
+  const pageGeometry = own.add(new THREE.PlaneGeometry(width - 0.12, height - 0.16, 6, 1))
+  pageGeometry.translate((width - 0.12) / 2, 0, 0)
+  const pages = Array.from({ length: 5 }, (_, i) => {
+    const page = new THREE.Mesh(pageGeometry, pageMaterial)
+    page.position.z = 0.2
+    book.add(page)
+    return { page, offset: i / 5 }
+  })
+
+  const ribbonGeometry = own.add(new THREE.BoxGeometry(0.07, 1.5, 0.02))
+  ribbonGeometry.translate(0, -0.75, 0)
+  const ribbon = new THREE.Mesh(ribbonGeometry, glow)
+  ribbon.position.set(0.05, -height / 2 + 0.3, 0.25)
+  book.add(ribbon)
+  book.rotation.x = -0.55
+
+  // Graduation cap: flat square board on a short crown, with a tassel.
+  const cap = new THREE.Group()
+  const board = new THREE.Mesh(own.add(new THREE.BoxGeometry(2, 0.07, 2)), coverMaterial)
+  board.rotation.y = Math.PI / 4
+  const crown = new THREE.Mesh(own.add(new THREE.CylinderGeometry(0.62, 0.7, 0.5, 24)), coverMaterial)
+  crown.position.y = -0.27
+  const button = new THREE.Mesh(own.add(new THREE.SphereGeometry(0.07, 10, 10)), glow)
+  button.position.y = 0.06
+  const cordGeometry = own.add(new THREE.CylinderGeometry(0.018, 0.018, 1, 6))
+  cordGeometry.translate(0, -0.5, 0)
+  const cord = new THREE.Mesh(cordGeometry, glow)
+  cord.position.set(0, 0.05, 0)
+  const tassel = new THREE.Mesh(own.add(new THREE.ConeGeometry(0.09, 0.32, 10)), glow)
+  tassel.position.y = -1.05
+  cord.add(tassel)
+  const cordPivot = new THREE.Group()
+  cordPivot.position.set(0.95, 0.03, 0)
+  cordPivot.add(cord)
+  cap.add(board, crown, button, cordPivot)
+  cap.position.y = 2.6
+  group.add(cap)
+
+  return {
+    group,
+    update(time, ambient) {
+      // Each page lifts off the right, arcs towards the viewer and settles
+      // on the left; staggered so one is always mid-turn.
+      for (const { page, offset } of pages) {
+        const t = (time * 0.28 * Math.max(ambient, 0.0001) + offset) % 1
+        const turn = t < 0.15 ? 0 : t > 0.85 ? 1 : (t - 0.15) / 0.7
+        const eased = turn * turn * (3 - 2 * turn)
+        // Decreasing angle = the free edge swings towards the viewer.
+        page.rotation.y = -0.22 - eased * (Math.PI - 0.44)
+        page.position.z = 0.2 + Math.sin(eased * Math.PI) * 0.05
+      }
+      ribbon.rotation.z = Math.sin(time * 1.2) * 0.12 * ambient
+      cap.rotation.y = time * 0.4 * ambient
+      cap.rotation.z = Math.sin(time * 0.7) * 0.08 * ambient
+      cap.position.y = 2.6 + Math.sin(time * 0.9) * 0.15 * ambient
+      cordPivot.rotation.z = Math.sin(time * 1.6) * 0.25 * ambient
+      book.rotation.y = Math.sin(time * 0.3) * 0.2 * ambient
+    },
+    dispose: own.dispose,
+  }
+}

@@ -86,8 +86,14 @@ export function stackStage({ count, labels, section }: StackOptions): StageFacto
 
         // Camera: far enough for the whole ring at first, then through it.
         const start = portrait ? 62 : 29
-        const dive = smoothstep(0.35, 1, progress)
-        const z = start - dive * (start + 10)
+        // The dive spans the whole section: every bit of scroll moves the
+        // camera towards (and finally through) the ring.
+        const dive = smoothstep(0, 1, progress)
+        // Ends just in front of the gimbals, core still in view: the exit
+        // flight is what carries the camera through, so the black moment
+        // before the next section is only that instant (past the ring there
+        // was nothing left to look at).
+        const z = start - dive * (start - 9)
         // Desktop: ring sits right of the heading, recentres for the dive.
         const viewW = start * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect
         group.position.x = portrait ? 0 : viewW * 0.075 * (1 - dive)
@@ -106,7 +112,7 @@ export function stackStage({ count, labels, section }: StackOptions): StageFacto
         section.style.setProperty('--stack-progress', progress.toFixed(4))
 
         // Labels: pinned just outside each node, gone before the dive.
-        const fade = (1 - smoothstep(0.3, 0.45, progress)) * smoothstep(0.6, 1, presence)
+        const fade = (1 - smoothstep(0.32, 0.5, progress)) * smoothstep(0.6, 1, presence)
         const elements = labels()
         nodes.forEach((node, i) => {
           const element = elements[i]

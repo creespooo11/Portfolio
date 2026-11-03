@@ -37,15 +37,16 @@ export function aboutStage(): StageFactory {
       update(frame) {
         const { time, ambient, progress, presence, pointer } = frame
         const viewTan = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-        const distance = 17
-        const viewH = distance * viewTan
+        // Layout is sized for the base distance; the camera then pushes in
+        // from it as the section scrolls (a slow dolly with a slight orbit).
+        const viewH = 17 * viewTan
         const viewW = viewH * camera.aspect
         const portrait = camera.aspect < 1
 
         // Desktop: figure on the left, text on the right. Portrait: top band.
         const scale = portrait ? Math.min(0.85, (viewW * 0.8) / 8) : Math.min(1.1, (viewW * 0.38) / 8)
-        holder.scale.setScalar(scale * (0.85 + 0.15 * presence))
-        holder.position.set(portrait ? 0 : -viewW * 0.24, portrait ? viewH * 0.24 : 0, -6 * (1 - presence))
+        holder.scale.setScalar(scale)
+        holder.position.set(portrait ? 0 : -viewW * 0.24, portrait ? viewH * 0.24 : 0, 0)
         holder.position.y += Math.sin(time * 0.6) * 0.12 * ambient
         holder.rotation.y = progress * 1.4 + pointer.x * 0.25
         holder.rotation.x = -pointer.y * 0.12
@@ -61,7 +62,8 @@ export function aboutStage(): StageFactory {
         ctx.lights.accent.intensity = 8 * smoothstep(0.3, 1, presence)
         ctx.lights.key.position.set(-4, 7, 12)
 
-        camera.position.set(pointer.x * 0.6, 0.4 - pointer.y * 0.3, distance)
+        const distance = 17 - progress * 3.5
+        camera.position.set((progress - 0.5) * 2.4 + pointer.x * 0.6, 0.4 + (0.5 - progress) * 1.2 - pointer.y * 0.3, distance)
         camera.lookAt(0, 0, 0)
         frame.fogDensity = 0.02
       },

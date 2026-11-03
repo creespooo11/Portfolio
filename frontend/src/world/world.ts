@@ -418,7 +418,7 @@ class World {
         const distance = Math.min(fromTop, fromBottom)
         if (distance > 0 && !active) {
           active = entry
-          presence = smoothstep(0, vh * 0.22, distance)
+          presence = smoothstep(0, vh * 0.14, distance)
           progress = clamp01(-top / Math.max(1, entry.height - vh))
           entering = fromTop < fromBottom
           setPresence(entry, presence)
@@ -475,10 +475,15 @@ class World {
       active.stage.update(frameState, ctx)
       // Transitions as flights: arriving, the camera comes in from behind;
       // leaving, it carries on forward into the dark.
-      camera.translateZ((1 - presence) * 9 * (entering ? 1 : -1))
+      // The only entrance/exit motion (stages don't add their own): a short
+      // flight that eases out as the stage arrives, so the figure is
+      // readable almost immediately instead of zooming in from far away.
+      const away = 1 - presence
+      camera.translateZ(away * away * 6 * (entering ? 1 : -1))
 
       fog.density = frameState.fogDensity
-      renderer.toneMappingExposure = presence * frameState.exposure
+      // Brightens fast (sqrt): the dark moment between stages stays short.
+      renderer.toneMappingExposure = Math.sqrt(presence) * frameState.exposure
 
       if (frameState.ambient) {
         dust.rotation.y = time * 0.012
@@ -492,6 +497,7 @@ class World {
 
       composer.render(dt)
       maybeDowngrade(dt)
+
     }
 
     this.ctx = ctx

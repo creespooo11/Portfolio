@@ -1,23 +1,22 @@
 import { smoothstep } from '../bricks'
-import { engravedTablet } from '../textures'
+import { studyBook } from '../figures'
 import { projectFocus } from './projects'
 import type { StageFactory } from '../world'
 
 const SPACING = 12
 
 interface ExperienceOptions {
-  entries: { title: string; subtitle: string; tag: string }[]
+  count: number
   panels: () => HTMLElement[]
 }
 
 /**
- * "Formación" (studies and titles): a red line of light running away into the dark, with a
- * stone plate floating at each entry. The camera travels along it, one
- * entry at a time.
+ * "Formación" (studies and titles): a red line of light running away into
+ * the dark, with an open book turning its pages (and a graduation cap
+ * above it) at each entry. The camera travels along the line.
  */
-export function experienceStage({ entries, panels }: ExperienceOptions): StageFactory {
-  return async (ctx) => {
-    const count = entries.length
+export function experienceStage({ count, panels }: ExperienceOptions): StageFactory {
+  return (ctx) => {
     const { THREE, camera, kit } = ctx
     const group = new THREE.Group()
     const glowMaterial = kit.glowMaterial()
@@ -28,24 +27,15 @@ export function experienceStage({ entries, panels }: ExperienceOptions): StageFa
     group.add(line)
 
     const nodeGeometry = new THREE.BoxGeometry(0.16, 0.16, 0.16)
-    const faces = await Promise.all(entries.map((entry) => engravedTablet(THREE, entry)))
-    const faceMaterials = faces.map((map) => new THREE.MeshStandardMaterial({ map, color: 0x9a9a9a, roughness: 0.7, metalness: 0.05 }))
-    const faceGeometry = new THREE.PlaneGeometry(4.3, 4.3 * (640 / 1024))
-    const plates = Array.from({ length: count }, (_, i) => {
+    const entries = Array.from({ length: count }, (_, i) => {
       const holder = new THREE.Group()
       holder.position.z = -i * SPACING
-      const plate = new THREE.Mesh(kit.geometry(4.6, 3, 0.36, 0.1), kit.materials[(i + 1) % 3])
-      const face = new THREE.Mesh(faceGeometry, faceMaterials[i])
-      face.position.z = 0.185
-      const halo = new THREE.Mesh(new THREE.PlaneGeometry(4.82, 3.22), glowMaterial)
-      halo.position.z = -0.25
-      const plateGroup = new THREE.Group()
-      plateGroup.add(halo, plate, face)
+      const figure = studyBook(ctx)
       const node = new THREE.Mesh(nodeGeometry, glowMaterial)
       node.position.y = -2.4
-      holder.add(plateGroup, node)
+      holder.add(figure.group, node)
       group.add(holder)
-      return { holder, plateGroup, halo, phase: i * 1.3 }
+      return { holder, figure, phase: i * 1.3 }
     })
 
     // Loose bricks scattered along the line, for depth while travelling.
@@ -72,12 +62,13 @@ export function experienceStage({ entries, panels }: ExperienceOptions): StageFa
 
         kit.setGlow(glowMaterial, 0.6)
 
-        plates.forEach((entry, i) => {
-          entry.plateGroup.position.set(portrait ? 0 : -viewW * 0.22, portrait ? viewH * 0.22 : -0.4, 0)
-          entry.plateGroup.position.y += Math.sin(time * 0.5 + entry.phase) * 0.12 * ambient
-          entry.plateGroup.rotation.y = 0.45 + pointer.x * 0.15 + Math.sin(time * 0.25 + entry.phase) * 0.06 * ambient
-          entry.plateGroup.rotation.x = -pointer.y * 0.08
-          entry.plateGroup.scale.setScalar(portrait ? 0.6 : Math.min(0.85, (viewW * 0.34) / 4.6))
+        entries.forEach((entry, i) => {
+          const figure = entry.figure.group
+          entry.figure.update(time + entry.phase, ambient)
+          figure.position.set(portrait ? 0 : -viewW * 0.22, (portrait ? viewH * 0.2 : -0.6) + Math.sin(time * 0.5 + entry.phase) * 0.12 * ambient, 0)
+          figure.rotation.y = 0.35 + pointer.x * 0.2
+          figure.rotation.x = -pointer.y * 0.08
+          figure.scale.setScalar(portrait ? 0.7 : Math.min(1.1, (viewW * 0.46) / 3.6))
 
           const weight = 1 - smoothstep(0.2, 0.55, Math.abs(focus - i))
           const panel = panels()[i]
@@ -95,7 +86,7 @@ export function experienceStage({ entries, panels }: ExperienceOptions): StageFa
           piece.mesh.rotation.y += piece.spin * 0.7 * frame.dt * ambient
         }
 
-        const z = -focus * SPACING + distance - progress * 2
+        const z = -focus * SPACING + distance + 3 - progress * 6
         camera.position.set(pointer.x * 0.5, 0.6 - pointer.y * 0.3, z)
         camera.lookAt(0, 0, z - distance)
 
@@ -112,13 +103,10 @@ export function experienceStage({ entries, panels }: ExperienceOptions): StageFa
         })
       },
       dispose() {
+        entries.forEach((entry) => entry.figure.dispose())
         glowMaterial.dispose()
         line.geometry.dispose()
         nodeGeometry.dispose()
-        plates.forEach((entry) => entry.halo.geometry.dispose())
-        faces.forEach((texture) => texture.dispose())
-        faceMaterials.forEach((material) => material.dispose())
-        faceGeometry.dispose()
       },
     }
   }

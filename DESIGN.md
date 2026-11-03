@@ -39,15 +39,16 @@ escenas se pasa por negro.
 
 - Portada: iniciales JC de bloques de piedra con núcleo rojo (ver Movimiento).
 - Sobre mí: esfera de cubitos que respira, con dos órbitas (una roja).
-- Proyectos: una figura por proyecto sobre un anillo rojo y una retícula de
-  puntos al fondo: VitSync = doble hélice (salud), PowerSupps = remolino de
+- Proyectos: una figura por proyecto sobre un anillo rojo, una detrás de
+  otra en profundidad, con una retícula de puntos al fondo: VitSync = doble hélice (salud), PowerSupps = remolino de
   cápsulas (suplementos), Portfolio = red geodésica con pulsos (microservicios).
   Un proyecto nuevo sin figura propia usa un nudo en alambre.
 - Stack: giroscopio. Anillo metálico con un nodo por tecnología (con su
   etiqueta) y anillos interiores girando en distintos ejes; la cámara lo
   atraviesa al hacer scroll.
-- Formación (antes "Experiencia"; son estudios y títulos): placas de piedra con el centro, puesto y periodo grabados, a lo
-  largo de una línea de luz roja.
+- Formación (antes "Experiencia"; son estudios y títulos): un libro abierto
+  que pasa páginas solo, con cinta roja y un birrete flotando encima, a lo
+  largo de una línea de luz roja. Sin placas con texto grabado (no gustó).
 - Contacto: el JC se vuelve a montar junto al formulario.
 
 ## Movimiento
@@ -87,6 +88,19 @@ La web tiene que ir muy fluida; es un requisito, no un extra.
   cámara vuela (llega desde atrás, sale hacia delante). Nada de páginas
   deslizándose entre escenas. En móvil el texto fluye normal.
 - El progreso de scroll que reciben las escenas va suavizado en el motor.
+- Entradas a cada escena: un único movimiento, el vuelo corto de cámara del
+  motor. Las escenas no añaden zooms ni desplazamientos propios ligados a la
+  presencia (sumados, la figura aparecía diminuta y oscura y tardaba en
+  verse). El brillo sube rápido y el negro entre escenas dura un instante.
+- Ninguna escena termina mirando al vacío: el final de cada una todavía
+  enseña su figura, y es el vuelo de salida el que la atraviesa.
+- Como en la portada, en todas las escenas cada píxel de scroll mueve la
+  cámara: nada de tramos en los que no pasa nada ni cámaras que se paran y
+  arrancan. Proyectos van uno detrás de otro en profundidad y la cámara
+  vuela hacia delante (la siguiente figura siempre se ve al fondo).
+- Todas las escenas cuestan lo mismo que la portada (~0,3 ms de CPU,
+  20-40 draw calls, ~10k triángulos): si algo se nota a tirones, mirar
+  antes el movimiento de cámara que el coste de render.
 - Piezas repetidas siempre con InstancedMesh; nada de cristal transparente
   (MeshPhysicalMaterial con transmisión) ni texturas de fotos.
 - Medido en Brave recorriendo toda la web: 2,8 ms de media por frame, ningún
