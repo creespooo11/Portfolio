@@ -7,4 +7,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 // regardless of import order.
 gsap.registerPlugin(ScrollTrigger)
 
+// Mobile browsers resize the viewport as the address bar shows/hides; by
+// default that triggers a full ScrollTrigger refresh mid-scroll (a visible
+// hitch). Only real width changes need one.
+ScrollTrigger.config({ ignoreMobileResize: true })
+
 export { gsap, ScrollTrigger }

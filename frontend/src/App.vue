@@ -3,9 +3,9 @@ import { nextTick, watch } from 'vue'
 import { usePortfolioData } from './composables/usePortfolioData'
 import { useLenis } from './composables/useLenis'
 import { ScrollTrigger } from './lib/gsap'
-import SiteHeader from './components/SiteHeader.vue'
+import WorldCanvas from './components/WorldCanvas.vue'
+import IntroSection from './components/IntroSection.vue'
 import FloatingNav from './components/FloatingNav.vue'
-import HeroSection from './components/HeroSection.vue'
 import AboutSection from './components/AboutSection.vue'
 import ProjectsSection from './components/ProjectsSection.vue'
 import StackSection from './components/StackSection.vue'
@@ -29,20 +29,22 @@ watch(loading, async (isLoading) => {
 
 <template>
   <div class="site-shell">
-    <SiteHeader />
+    <WorldCanvas />
+    <IntroSection />
     <FloatingNav />
 
     <main id="top">
-      <HeroSection :skills-count="skills.length" />
-
       <AboutSection />
 
       <div v-if="loading" class="loading-state section-wrap">Cargando proyectos desde portfolio-service...</div>
       <div v-else-if="error" class="error-state section-wrap">{{ error }}</div>
-      <ProjectsSection v-else :projects="projects" />
-
-      <StackSection :skills="skills" />
-      <ExperienceSection :experience="experience" />
+      <!-- Each of these builds its 3D stage from the data on mount, so they
+           only mount once it has arrived. -->
+      <template v-else>
+        <ProjectsSection :projects="projects" />
+        <StackSection :skills="skills" />
+        <ExperienceSection :experience="experience" />
+      </template>
       <ContactSection />
     </main>
 

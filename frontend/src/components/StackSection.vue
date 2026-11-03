@@ -1,45 +1,44 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useScrollReveal } from '../composables/useScrollReveal'
+import { useStage } from '../composables/useStage'
+import { stackStage } from '../world/stages/stack'
 import SectionLabel from './SectionLabel.vue'
 import type { Skill } from '../api'
 
 const props = defineProps<{ skills: Skill[] }>()
 
 const sectionEl = ref<HTMLElement | null>(null)
-useScrollReveal(sectionEl)
+const labelEls = ref<HTMLElement[]>([])
 
-const activeFilter = ref('Todos')
+const categories = computed(() => [...new Set(props.skills.map((skill) => skill.category))])
 
-const categories = computed(() => ['Todos', ...new Set(props.skills.map((skill) => skill.category))])
-const visibleSkills = computed(() =>
-  activeFilter.value === 'Todos' ? props.skills : props.skills.filter((skill) => skill.category === activeFilter.value),
+const { supported } = useStage(sectionEl, (ctx) =>
+  stackStage({ count: props.skills.length, labels: () => labelEls.value, section: sectionEl.value! })(ctx),
 )
 </script>
 
 <template>
-  <section ref="sectionEl" class="stack-section section--light">
-    <div class="section-wrap">
-      <SectionLabel text="STACK" :repeat="6" :trigger-el="sectionEl" />
-      <h2>Stack.</h2>
-
-      <div class="filter-list">
-        <button
-          v-for="category in categories"
-          :key="category"
-          type="button"
-          :class="{ active: activeFilter === category }"
-          @click="activeFilter = category"
-        >
-          {{ category }}
-        </button>
+  <section ref="sectionEl" :class="['stack-section', 'stage-section', { 'is-static': !supported }]">
+    <div class="stage-sticky">
+      <div class="section-wrap stack-head stage-heading">
+        <SectionLabel text="STACK" :repeat="6" :trigger-el="sectionEl" />
+        <h2>Stack.</h2>
+        <p class="stack-summary">
+          {{ skills.length }} tecnologías con las que trabajo: {{ categories.join(', ').toLowerCase() }}.
+        </p>
       </div>
 
-      <ul class="stack-list">
-        <li v-for="(skill, i) in visibleSkills" :key="skill.id">
-          <span class="stack-index">{{ String(i + 1).padStart(2, '0') }}</span>
-          <span class="stack-name">{{ skill.name }}</span>
-          <span class="stack-category">{{ skill.category }}</span>
+      <!-- Each label is pinned onto its node of the ring by the 3D stage. -->
+      <ul class="stack-labels">
+        <li
+          v-for="(skill, i) in skills"
+          :key="skill.id"
+          :ref="(el) => el && (labelEls[i] = el as HTMLElement)"
+          class="stack-label"
+        >
+          <span class="stack-label-index">{{ String(i + 1).padStart(2, '0') }}</span>
+          <span class="stack-label-name">{{ skill.name }}</span>
+          <span class="stack-label-category">{{ skill.category }}</span>
         </li>
       </ul>
     </div>

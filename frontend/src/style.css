@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap");
-
 :root {
   font-family: "Space Grotesk", sans-serif;
   font-synthesis: none;
@@ -25,7 +23,9 @@ body {
   color: var(--fg);
 }
 .site-shell {
-  overflow-x: hidden;
+  /* clip, not hidden: hidden would make this a scroll container and break
+     the intro's position: sticky stage. */
+  overflow-x: clip;
 }
 .section-wrap {
   width: min(1180px, calc(100% - 64px));
@@ -33,30 +33,208 @@ body {
   position: relative;
 }
 
-/* A section opts into the light half of the palette by adding this class;
-   --red is intentionally left untouched, it's the one accent that never
-   flips with the background. */
-.section--light {
-  --bg: #f5f5f0;
-  --fg: #0a0a0a;
-  --muted: rgba(10, 10, 10, 0.6);
-  --line: rgba(10, 10, 10, 0.14);
-  background: var(--bg);
+/* ---------- Intro (3D monogram) ---------- */
+/* Taller than the viewport: the stage stays pinned while the extra height
+   is scrolled, and that scroll drives the monogram breaking apart.
+   --intro-progress (0-1) is written by useIntroScene every frame. */
+.intro {
+  --intro-progress: 0;
+  position: relative;
+  z-index: 1;
+  height: 175vh;
+}
+.intro-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  contain: strict;
+  /* --presence comes from the 3D director; the intro is fully shown before
+     it starts so the name is there from the first paint. */
+  opacity: var(--presence, 1);
+}
+.intro:not(.is-active) .intro-stage {
+  visibility: hidden;
+}
+/* Until the director runs (or without WebGL) the intro is the active one. */
+.intro:not([style*="--presence"]) .intro-stage {
+  visibility: visible;
+}
+.intro-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 400 clamp(8rem, 30vw, 22rem) / 1 "Anton", sans-serif;
   color: var(--fg);
 }
-
-/* ---------- Topbar ---------- */
-.topbar {
-  height: 82px;
+.intro-fallback span {
+  color: var(--red);
+}
+.intro-hud {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  opacity: 0;
+}
+.intro-hud polyline,
+.intro-hud path {
+  fill: none;
+  stroke: rgba(245, 245, 240, 0.55);
+  stroke-width: 1;
+}
+.intro-hud text {
+  fill: var(--fg);
+  font:
+    500 13px "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.01em;
+  white-space: pre;
+}
+.intro-chrome {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: max(0, 1 - var(--intro-progress) * 5);
+}
+.intro-corner {
+  position: absolute;
+  display: grid;
+  gap: 18px;
+  pointer-events: auto;
+}
+.intro-corner--tl {
+  top: clamp(24px, 4vw, 48px);
+  left: clamp(20px, 3.5vw, 52px);
+}
+.intro-corner--tr {
+  top: clamp(32px, 4.6vw, 58px);
+  right: clamp(20px, 3.5vw, 52px);
+  justify-items: end;
+  text-align: right;
+}
+.intro-corner--bl {
+  bottom: clamp(24px, 4vw, 48px);
+  left: clamp(20px, 3.5vw, 52px);
+  gap: 10px;
+}
+.intro-corner--br {
+  bottom: clamp(24px, 4vw, 48px);
+  right: clamp(20px, 3.5vw, 52px);
+}
+.intro-brand {
+  font: 400 clamp(2.8rem, 4.6vw, 4.2rem) / 0.9 "Anton", sans-serif;
+  color: var(--fg);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+}
+.intro-brand span {
+  color: var(--red);
+}
+.intro-name {
+  margin: 0;
+  font:
+    600 clamp(1.15rem, 1.55vw, 1.45rem) / 1.2 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.intro-role {
+  margin: 4px 0 0;
+  font:
+    400 clamp(0.95rem, 1.1vw, 1.05rem) / 1.4 "Space Grotesk",
+    sans-serif;
+  color: var(--muted);
+}
+.intro-manifesto {
+  margin: 0;
+  max-width: 30ch;
+  font:
+    400 clamp(1rem, 1.3vw, 1.2rem) / 1.45 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.intro-count {
+  margin: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: min(1280px, calc(100% - 64px));
-  margin: auto;
-  border-bottom: 1px solid var(--line);
-  position: relative;
-  z-index: 20;
+  gap: 10px;
+  font:
+    500 0.85rem / 1 "Space Grotesk",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
 }
+.intro-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: intro-blink 0.9s steps(2, start) infinite;
+}
+.intro-status.is-complete {
+  background: #67b56e;
+  box-shadow: 0 0 0 3px rgba(103, 181, 110, 0.18);
+  animation: none;
+}
+.intro-enter {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font:
+    500 1.05rem / 1.3 "Space Grotesk",
+    sans-serif;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.intro-enter span {
+  display: inline-block;
+  margin-left: 4px;
+  color: var(--red);
+  animation: intro-nudge 1.6s ease-in-out infinite;
+}
+.intro-enter:hover,
+.intro-enter:focus-visible {
+  color: var(--red);
+}
+.intro .system-clock {
+  font:
+    500 0.85rem "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+@keyframes intro-blink {
+  to {
+    visibility: hidden;
+  }
+}
+@keyframes intro-nudge {
+  50% {
+    transform: translateY(4px);
+  }
+}
+@media (max-width: 760px) {
+  .intro-corner--tr {
+    top: auto;
+    bottom: clamp(96px, 22vw, 140px);
+    right: auto;
+    left: clamp(20px, 3.5vw, 52px);
+    justify-items: start;
+    text-align: left;
+  }
+  .intro-corner--br {
+    display: none;
+  }
+}
+
+/* ---------- Brand + links ---------- */
 .brand {
   font-weight: 700;
   font-size: 1.35rem;
@@ -67,30 +245,12 @@ body {
 .brand span {
   color: var(--red);
 }
-.topbar nav {
-  display: flex;
-  gap: 32px;
-}
 nav a,
-.availability,
 .text-link {
   color: var(--fg);
   text-decoration: none;
   font-size: 0.77rem;
   font-family: "DM Mono", monospace;
-}
-.availability {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.availability i {
-  height: 7px;
-  width: 7px;
-  background: #67b56e;
-  border-radius: 50%;
-  display: block;
-  box-shadow: 0 0 0 3px rgba(103, 181, 110, 0.18);
 }
 .text-link {
   border-bottom: 1px solid var(--fg);
@@ -110,10 +270,10 @@ nav a,
   gap: 4px;
   padding: 10px;
   border-radius: 999px;
-  background: rgba(10, 10, 10, 0.55);
+  /* Opaque instead of backdrop-filter: a blur behind a fixed element is
+     re-rendered on every scrolled frame and is a common source of jank. */
+  background: rgba(10, 10, 10, 0.9);
   border: 1px solid rgba(245, 245, 240, 0.14);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 .floating-nav-link {
   writing-mode: vertical-rl;
@@ -216,151 +376,6 @@ nav a,
   cursor: not-allowed;
 }
 
-/* ---------- Hero ---------- */
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  padding-top: 110px;
-  overflow: hidden;
-}
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-}
-.hero-bg-image {
-  position: absolute;
-  top: -10%;
-  left: 0;
-  width: 100%;
-  height: 130%;
-  object-fit: cover;
-  filter: grayscale(1) brightness(0.5) contrast(1.05);
-  will-change: transform;
-}
-.hero-bg-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(10, 10, 10, 0.5) 0%, rgba(10, 10, 10, 0.75) 65%, var(--bg) 100%),
-    linear-gradient(0deg, rgba(200, 16, 46, 0.16), rgba(200, 16, 46, 0.16));
-}
-.hero-system {
-  position: relative;
-  z-index: 2;
-  align-self: flex-end;
-  margin: 0 max(32px, 3vw);
-}
-.hero-copy {
-  position: relative;
-  z-index: 2;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 60px max(32px, 3vw) 70px;
-}
-.hero-name-wrap {
-  position: relative;
-  max-width: 20ch;
-  /* Scales with the name's own font-size (clamp(3.4rem, 12vw, 10.5rem))
-     so the reveal circle stays a tight, localized spotlight relative to
-     each line's height instead of a fixed radius that either swamps the
-     name on huge screens or barely shows on small ones. */
-  --mask-radius: clamp(70px, 7vw, 120px);
-}
-.hero-name {
-  margin: 0;
-  font-family: "Anton", sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  line-height: 0.86;
-  letter-spacing: 0;
-  font-size: clamp(3.4rem, 12vw, 10.5rem);
-}
-/* Base layer: always visible from the first frame, no animation to
-   stall or half-complete on a hard reload. */
-.hero-name--outline {
-  color: transparent;
-  -webkit-text-stroke: 1.5px #fff;
-}
-/* Solid-white layer, positioned exactly on top of the outline and
-   revealed only inside a circle that follows the cursor via a
-   radial-gradient mask whose center is driven by --mx/--my. */
-.hero-name--fill {
-  position: absolute;
-  inset: 0;
-  color: #fff;
-  pointer-events: none;
-  -webkit-mask-image: radial-gradient(
-    circle var(--mask-radius) at var(--mx, -9999px) var(--my, -9999px),
-    #fff 0%,
-    #fff 55%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  mask-image: radial-gradient(
-    circle var(--mask-radius) at var(--mx, -9999px) var(--my, -9999px),
-    #fff 0%,
-    #fff 55%,
-    rgba(255, 255, 255, 0) 100%
-  );
-}
-/* Touch devices have no hovering cursor, so the reveal effect makes no
-   sense there: show the name solid-filled outright instead. */
-@media (hover: none), (pointer: coarse) {
-  .hero-name--outline {
-    display: none;
-  }
-  .hero-name--fill {
-    position: relative;
-    inset: auto;
-    -webkit-mask-image: none;
-    mask-image: none;
-  }
-}
-.hero-subtitle {
-  margin: 30px 0 0;
-  font:
-    500 0.85rem "DM Mono",
-    monospace;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.hero-stats {
-  margin-top: 56px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
-  max-width: 760px;
-}
-.stat-item {
-  border-top: 1px solid var(--line);
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.stat-value {
-  font-family: "Anton", sans-serif;
-  font-weight: 400;
-  font-size: clamp(1.6rem, 3vw, 2.4rem);
-  color: var(--red);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-.stat-label {
-  font:
-    500 0.6rem "DM Mono",
-    monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
 /* ---------- Marquee (generic) ---------- */
 .marquee {
   overflow: hidden;
@@ -387,15 +402,6 @@ nav a,
   visibility: hidden;
   pointer-events: none;
   left: -9999px;
-}
-.hero-marquee {
-  background: var(--red);
-  color: var(--fg);
-  font:
-    500 0.82rem "DM Mono",
-    monospace;
-  letter-spacing: 0.02em;
-  padding: 20px 0;
 }
 .footer-marquee {
   color: var(--red);
@@ -434,17 +440,14 @@ nav a,
 }
 
 /* ---------- Section headings (shared) ---------- */
-.about-section h2,
-.projects-section h2,
-.stack-section h2,
-.experience-section h2 {
+.stage-section h2:not(.contact-headline) {
   font-family: "Anton", sans-serif;
   font-weight: 400;
   text-transform: uppercase;
   font-size: clamp(2.4rem, 5.5vw, 4.6rem);
   line-height: 0.95;
   letter-spacing: 0;
-  margin: 14px 0 56px;
+  margin: 14px 0 28px;
 }
 h2 em,
 .contact-headline em {
@@ -455,13 +458,155 @@ h2 em,
   text-transform: none;
 }
 
-/* ---------- About ---------- */
-.about-section {
-  position: relative;
-  padding: 130px 0;
-  border-top: 1px solid var(--line);
+/* ---------- 3D world (one fixed canvas behind every section) ---------- */
+.world-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
 }
+.world-canvas.is-ready {
+  opacity: 1;
+}
+
+/* ---------- Stage sections ---------- */
+/* Each section is taller than the viewport but its content never scrolls:
+   .stage-sticky is fixed to the screen and fades with --presence (set by
+   the 3D director, src/world/world.ts), so moving between sections is a
+   crossfade while the camera flies on, not a page sliding past. The
+   section's own height is just the scroll distance for its stage. */
+.stage-section {
+  position: relative;
+  z-index: 1;
+  height: var(--stage-height, 220vh);
+}
+.stage-sticky {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  opacity: var(--presence, 0);
+  visibility: hidden;
+}
+.stage-section.is-active .stage-sticky {
+  visibility: visible;
+}
+.stage-sticky > .section-wrap {
+  width: min(1280px, calc(100% - 96px));
+}
+.stage-columns {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr minmax(320px, 440px);
+  grid-template-rows: auto 1fr;
+  padding: clamp(72px, 11vh, 120px) 0 clamp(56px, 9vh, 96px);
+}
+.stage-heading {
+  grid-column: 1 / -1;
+}
+.stage-panels {
+  grid-column: 2;
+  position: relative;
+  align-self: center;
+  min-height: 360px;
+}
+.stage-panels .stage-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  visibility: hidden;
+  will-change: opacity, transform;
+}
+.stage-callouts {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.stage-callouts path {
+  fill: none;
+  stroke: rgba(245, 245, 240, 0.45);
+  stroke-width: 1;
+  opacity: 0;
+}
+
+/* HUD panel typography shared by projects and experience. */
+.panel-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0 0 18px;
+  font:
+    500 0.85rem "Space Grotesk",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.panel-tag {
+  color: var(--red);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.panel-title {
+  margin: 0 0 20px;
+  font: 400 clamp(2.6rem, 5vw, 4.4rem) / 0.95 "Anton", sans-serif;
+  text-transform: uppercase;
+}
+.panel-title--small {
+  font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+  line-height: 1.05;
+}
+.panel-company {
+  margin: 0 0 16px;
+  font:
+    500 1rem "Space Grotesk",
+    sans-serif;
+  color: var(--red);
+}
+.panel-text {
+  max-width: 42ch;
+  margin: 0 0 26px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.panel-links {
+  display: flex;
+  gap: 26px;
+  margin: 0;
+}
+.panel-links a {
+  font:
+    500 1rem "Space Grotesk",
+    sans-serif;
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 4px;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.panel-links a:hover,
+.panel-links a:focus-visible {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* ---------- About ---------- */
 .huge-phrase {
+  will-change: transform;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -473,271 +618,116 @@ h2 em,
   text-transform: uppercase;
   line-height: 1;
   font-size: clamp(4.5rem, 19vw, 15rem);
-  color: var(--red);
-  opacity: 0.14;
+  color: var(--fg);
+  opacity: 0.045;
   pointer-events: none;
   user-select: none;
 }
-.about-grid {
+.about-layout {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: 0.85fr 1fr;
-  gap: 70px;
-  align-items: center;
-}
-.about-media {
-  position: relative;
-  overflow: hidden;
-}
-.about-media img {
-  display: block;
-  width: 100%;
-  height: 560px;
-  object-fit: cover;
-  filter: grayscale(1) contrast(1.05);
-}
-.about-media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--red);
-  opacity: 0.12;
-  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
 }
 .about-copy {
-  max-width: 620px;
+  max-width: 520px;
 }
 .about-copy p {
-  font-size: 1.08rem;
+  font-size: 1.06rem;
   line-height: 1.62;
   color: var(--muted);
-  margin: 0 0 24px;
+  margin: 0 0 20px;
 }
 
-/* ---------- Projects (hover-reveal) ---------- */
-.projects-section {
-  padding: 130px 0;
-  border-top: 1px solid var(--line);
-}
-.project-nav {
-  position: relative;
-  border-top: 1px solid var(--line);
-}
-.project-nav-item {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 34px 4px;
-  border-bottom: 1px solid var(--line);
-  text-decoration: none;
-  color: var(--fg);
-  transition:
-    color 0.25s ease,
-    padding-left 0.25s ease;
-}
-.project-nav-item:hover,
-.project-nav-item:focus-visible {
-  color: var(--red);
-  padding-left: 18px;
-}
-.project-nav-name {
-  font-family: "Anton", sans-serif;
-  font-weight: 400;
-  text-transform: uppercase;
-  font-size: clamp(1.8rem, 4.5vw, 3.2rem);
-  letter-spacing: 0;
-}
-.project-nav-tag {
-  font:
-    500 0.72rem "DM Mono",
-    monospace;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  white-space: nowrap;
-  transition: color 0.25s ease;
-}
-.project-nav-item:hover .project-nav-tag,
-.project-nav-item:focus-visible .project-nav-tag {
-  color: var(--red);
-}
-.project-preview {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 5;
-}
-.project-preview-frame {
-  position: absolute;
-  left: 28px;
-  top: -95px;
-  width: 300px;
-  height: 200px;
-  opacity: 0;
-  transform: scale(0.92);
-  border: 1px solid var(--line);
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
-}
-.project-preview-image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1) brightness(0.75) contrast(1.05);
-}
-.project-preview-overlay {
-  position: absolute;
-  inset: 0;
-  background: var(--red);
-  opacity: 0.13;
-  pointer-events: none;
+/* ---------- Projects ---------- */
+.projects-section .stage-heading h2 {
+  margin-bottom: 0;
 }
 
 /* ---------- Stack ---------- */
 .stack-section {
-  padding: 130px 0;
-  border-top: 1px solid var(--line);
+  --stage-height: 260vh;
+  --stack-progress: 0;
 }
-.filter-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 40px;
+.stack-section .stage-sticky {
+  align-items: flex-start;
 }
-.filter-list button {
-  font:
-    500 0.68rem "DM Mono",
-    monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border: 1px solid var(--line);
-  background: none;
-  padding: 10px 14px;
-  color: var(--fg);
-  cursor: pointer;
+.stack-head {
+  position: relative;
+  z-index: 1;
+  padding-top: clamp(72px, 11vh, 120px);
+  opacity: max(0, 1 - var(--stack-progress) * 3);
 }
-.filter-list button.active,
-.filter-list button:hover {
-  background: var(--fg);
-  color: var(--bg);
-  border-color: var(--fg);
+.stack-summary {
+  max-width: 36ch;
+  margin: 18px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--muted);
 }
-.stack-list {
+.stack-labels {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--line);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
-.stack-list li {
+.stack-label {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
-  align-items: center;
-  gap: 22px;
-  padding: 18px 4px;
-  border-bottom: 1px solid var(--line);
-  font-family: "DM Mono", monospace;
+  align-items: baseline;
+  gap: 10px;
+  padding: 0 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
 }
-.stack-index {
+.stack-label-index {
+  font-size: 0.75rem;
   color: var(--red);
-  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
 }
-.stack-name {
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
+.stack-label-name {
+  font:
+    600 1.05rem "Space Grotesk",
+    sans-serif;
+  color: var(--fg);
 }
-.stack-category {
-  margin-left: auto;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--red);
+.stack-label-category {
+  font-size: 0.8rem;
+  color: var(--muted);
 }
 
 /* ---------- Experience ---------- */
-.experience-section {
-  padding: 130px 0;
-  border-top: 1px solid var(--line);
-}
-.experience-list article {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 30px;
-  border-top: 1px solid var(--line);
-  padding: 26px 0;
-}
-.experience-list article:last-child {
-  border-bottom: 1px solid var(--line);
-}
-.period {
-  font:
-    500 0.68rem "DM Mono",
-    monospace;
-  color: var(--red);
-}
-.experience-list h3 {
-  margin: 0 0 6px;
-  font-size: 1.3rem;
-}
-.company {
-  font:
-    500 0.68rem "DM Mono",
-    monospace;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 14px;
-}
-.experience-list p:last-child {
-  font-size: 0.95rem;
-  line-height: 1.55;
-  color: var(--muted);
-  margin: 0;
+.experience-section .stage-heading h2 {
+  margin-bottom: 0;
 }
 
 /* ---------- Contact ---------- */
 .contact-section {
+  --stage-height: 150vh;
+}
+.contact-content {
   position: relative;
-  padding: 150px 0 60px;
-  border-top: 1px solid var(--line);
-  overflow: hidden;
-}
-.contact-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-.contact-bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1) brightness(0.35);
-}
-.contact-bg-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, var(--bg) 0%, rgba(10, 10, 10, 0.82) 40%, var(--bg) 100%);
-}
-.contact-section .section-wrap {
   z-index: 1;
 }
 .contact-headline {
   font-family: "Anton", sans-serif;
   font-weight: 400;
-  font-size: clamp(2.8rem, 9vw, 6.4rem);
-  line-height: 0.92;
+  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  line-height: 0.95;
   letter-spacing: 0;
   text-transform: uppercase;
-  margin: 0 0 60px;
+  margin: 0 0 44px;
 }
 .contact-form {
-  max-width: 560px;
+  max-width: 480px;
   display: grid;
-  gap: 34px;
+  gap: 30px;
 }
 .underline-field {
   display: grid;
@@ -745,10 +735,8 @@ h2 em,
 }
 .underline-field label {
   font:
-    500 0.68rem "DM Mono",
-    monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+    500 0.85rem "Space Grotesk",
+    sans-serif;
   color: var(--muted);
 }
 .underline-field input,
@@ -773,8 +761,8 @@ h2 em,
 .form-message {
   margin: 0;
   font:
-    500 0.78rem "DM Mono",
-    monospace;
+    500 0.9rem "Space Grotesk",
+    sans-serif;
 }
 .form-message-error {
   color: #ef8a72;
@@ -785,6 +773,9 @@ h2 em,
 
 /* ---------- Footer ---------- */
 .site-footer {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
   border-top: 1px solid var(--line);
   padding-top: 10px;
 }
@@ -822,6 +813,8 @@ h2 em,
 /* ---------- Loading / error states ---------- */
 .loading-state,
 .error-state {
+  position: relative;
+  z-index: 1;
   border-top: 1px solid var(--line);
   padding: 25px 0;
   font:
@@ -833,84 +826,68 @@ h2 em,
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 900px) {
-  .hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .about-grid {
-    grid-template-columns: 1fr;
-  }
-  .about-media img {
-    height: 380px;
-  }
-}
-
 @media (max-width: 760px) {
   .section-wrap,
-  .topbar {
+  .stage-sticky > .section-wrap {
     width: calc(100% - 36px);
   }
-  .topbar {
-    height: 70px;
-  }
-  .topbar nav {
-    display: none;
-  }
-  .availability {
-    font-size: 0.58rem;
-  }
 
-  .hero {
-    padding-top: 90px;
-  }
-  .hero-system {
-    margin: 0 18px;
-  }
-  .hero-system .system-clock-label {
-    display: none;
-  }
-  .hero-name-wrap {
-    --mask-radius: 130px;
-  }
-  .hero-copy {
-    padding: 50px 18px 50px;
-  }
-  .hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-  }
-
+  /* Phones: long text doesn't fit a pinned 100vh stage, so sections flow
+     normally over the fixed 3D canvas and every panel is shown, each on
+     a dark card so it stays legible over the scene. The stack ring and the
+     intro keep their pinned stage (no long copy, labels track the ring). */
   .about-section,
   .projects-section,
-  .stack-section,
-  .experience-section {
-    padding: 82px 0;
+  .experience-section,
+  .contact-section {
+    height: auto;
   }
-
-  .project-nav-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 24px 4px;
+  .about-section .stage-sticky,
+  .projects-section .stage-sticky,
+  .experience-section .stage-sticky,
+  .contact-section .stage-sticky {
+    position: relative;
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    min-height: 100svh;
+    display: block;
+    padding: 96px 0 72px;
   }
-  .project-nav-item:hover,
-  .project-nav-item:focus-visible {
-    padding-left: 4px;
+  .about-copy {
+    margin-top: 46svh;
   }
-  .project-preview {
+  .contact-content {
+    padding-top: 44svh;
+  }
+  .stage-columns {
+    display: block;
+    height: auto;
+    padding: 0;
+  }
+  .stage-panels {
+    min-height: 0;
+    margin-top: 40svh;
+  }
+  .stage-panels .stage-panel,
+  .about-copy {
+    position: static;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+    margin-bottom: 28px;
+    padding: 22px;
+    background: rgba(7, 7, 7, 0.78);
+    border: 1px solid var(--line);
+  }
+  .stage-callouts {
     display: none;
   }
-
-  .experience-list article {
-    grid-template-columns: 70px 1fr;
-    gap: 16px;
+  .stack-label {
+    padding: 0 6px;
   }
-
-  .contact-section {
-    padding: 90px 0 40px;
-  }
-  .contact-form {
-    max-width: 100%;
+  .stack-label-category {
+    display: none;
   }
 
   .site-footer-inner {
@@ -929,6 +906,50 @@ h2 em,
   .floating-nav-cta {
     margin-top: 0;
   }
+}
+
+/* No WebGL: no stages to scroll through, so sections lay out as plain
+   pages with every panel visible. */
+.is-static,
+.no-world .stage-section {
+  height: auto;
+}
+.is-static .stage-sticky,
+.no-world .stage-sticky {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  display: block;
+  padding: 110px 0;
+}
+.is-static .stage-columns {
+  display: block;
+  height: auto;
+  padding: 0;
+}
+.is-static .stage-panels {
+  min-height: 0;
+  margin-top: 40px;
+}
+.is-static .stage-panels .stage-panel {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  margin-bottom: 56px;
+}
+.is-static .stack-labels {
+  position: static;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  width: min(1280px, calc(100% - 96px));
+  margin: 40px auto 0;
+}
+.is-static .stack-label {
+  position: static;
+  opacity: 1;
+  visibility: visible;
 }
 
 @media (prefers-reduced-motion: reduce) {

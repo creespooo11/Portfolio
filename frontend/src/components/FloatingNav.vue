@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 import { gsap } from '../lib/gsap'
-import { getLenis } from '../composables/useLenis'
+import { scrollToSection } from '../composables/useScrollTo'
 
 /**
- * Pill-shaped, fixed nav docked to the right edge. Hidden over the hero on
- * purpose (the hero already owns that screen), it fades/slides in once the
+ * Pill-shaped, fixed nav docked to the right edge. Hidden over the intro on
+ * purpose (the intro already owns that screen), it fades/slides in once the
  * visitor scrolls past it and stays put for the rest of the page.
  */
 const links = [
@@ -17,15 +17,6 @@ const links = [
 const navEl = ref<HTMLElement | null>(null)
 let tween: gsap.core.Tween | null = null
 
-function scrollToSection(target: string) {
-  const lenis = getLenis()
-  if (lenis) {
-    lenis.scrollTo(target, { offset: -20 })
-  } else {
-    document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' })
-  }
-}
-
 onMounted(() => {
   if (!navEl.value) return
   tween = gsap.from(navEl.value, {
@@ -34,7 +25,7 @@ onMounted(() => {
     duration: 0.6,
     ease: 'power2.out',
     scrollTrigger: {
-      trigger: '.hero',
+      trigger: '.intro',
       start: 'bottom top',
       toggleActions: 'play none none reverse',
     },

@@ -23,9 +23,11 @@ export function useLenis() {
   let onTick: ((time: number) => void) | null = null
 
   onMounted(() => {
+    // lerp-based smoothing (rather than a fixed duration + easing) keeps
+    // the page gliding continuously while the wheel is still turning,
+    // instead of restarting a curve on every wheel tick.
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      lerp: 0.085,
       smoothWheel: true,
     })
     activeLenis = lenis

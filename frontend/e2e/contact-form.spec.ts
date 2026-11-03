@@ -10,18 +10,32 @@ import { expect, test } from '@playwright/test'
  * (scroll-reveal animations) on load. Playwright's own actionability
  * checks (auto-scroll-into-view, auto-wait) already handle interacting with
  * elements below the fold correctly even while those are running, but we
- * still give the hero's entrance animation a moment to settle before the
+ * still give the intro's entrance animation a moment to settle before the
  * first interaction, so a slow CI runner can't catch it mid-animation.
  */
 async function waitForPageReady(page: import('@playwright/test').Page) {
   await page.goto('/')
-  await page.waitForSelector('.hero-name', { state: 'visible' })
+  await page.waitForSelector('.intro-name', { state: 'visible' })
   await page.waitForTimeout(1200)
+}
+
+/**
+ * Section content is fixed to the screen and only shown while its section
+ * is the active 3D stage, so Playwright's auto-scroll can't reach the form:
+ * scroll to the contact section first.
+ */
+async function goToContact(page: import('@playwright/test').Page) {
+  await page.evaluate(() => {
+    const section = document.querySelector('#contact')!
+    window.scrollTo(0, section.getBoundingClientRect().top + window.scrollY + 40)
+  })
+  await page.locator('#contact-name').waitFor({ state: 'visible' })
 }
 
 test.describe('Formulario de contacto', () => {
   test('envía un mensaje válido y muestra el mensaje de éxito', async ({ page }) => {
     await waitForPageReady(page)
+    await goToContact(page)
 
     const uniqueEmail = `ada.lovelace.${Date.now()}@example.com`
 
@@ -50,6 +64,7 @@ test.describe('Formulario de contacto', () => {
 
   test('muestra un error claro si el email no es válido, sin perder lo escrito', async ({ page }) => {
     await waitForPageReady(page)
+    await goToContact(page)
 
     await page.locator('#contact-name').fill('Grace Hopper')
     await page.locator('#contact-email').fill('esto-no-es-un-email')
@@ -74,33 +89,25 @@ test.describe('Formulario de contacto', () => {
 })
 
 test.describe('Animaciones (GSAP + Lenis)', () => {
-  test('el nombre del hero se muestra completo y los contadores cuentan hasta su valor real', async ({ page }) => {
+  test('el nombre de la intro se muestra completo desde el primer frame', async ({ page }) => {
     await waitForPageReady(page)
 
-    // No entrance timeline to wait for anymore: the outline layer is plain
-    // CSS and must already show the full name.
-    await expect(page.locator('.hero-name--outline')).toHaveText('JAVIER CRESPO MOLL')
-    await expect(page.locator('.hero-name--fill')).toHaveText('JAVIER CRESPO MOLL')
-
-    const stats = page.locator('.stat-value')
-    await expect(stats.nth(0)).toHaveText('2', { timeout: 5000 })
-    await expect(stats.nth(1)).toHaveText('3', { timeout: 5000 })
-    await expect(stats.nth(2)).toHaveText('DESDE 2024', { timeout: 5000 })
-    // The 4th stat depends on portfolio-service's async response (stack
-    // size): it must count past its initial 0 once that data arrives.
-    await expect(stats.nth(3)).not.toHaveText('0', { timeout: 8000 })
+    // The intro's h1 is never scrambled or animated in: it must already
+    // show the full text.
+    await expect(page.locator('.intro-name')).toHaveText('Javier Crespo Moll')
   })
 
-  test('el hover sobre un proyecto revela su imagen con el overlay rojo', async ({ page }) => {
+  test('al llegar a proyectos se muestra la ficha del primero junto a su figura 3D', async ({ page }) => {
     await waitForPageReady(page)
 
-    const firstProject = page.locator('.project-nav-item').first()
-    await firstProject.scrollIntoViewIfNeeded()
-    await firstProject.hover()
-
-    // Confirms the GSAP tween actually reached its target state, not just
-    // that the element exists in the DOM (which would pass even at opacity 0).
-    await expect(page.locator('.project-preview-frame')).toHaveCSS('opacity', '1', { timeout: 3000 })
-    await expect(page.locator('.project-preview-overlay')).toBeAttached()
+    // The panels are faded in by the 3D stage as the camera reaches each
+    // project, so this checks the stage actually drove it to full opacity.
+    await page.evaluate(() => {
+      const section = document.querySelector('#work')!
+      window.scrollTo(0, section.getBoundingClientRect().top + window.scrollY + 40)
+    })
+    const firstPanel = page.locator('.project-panel').first()
+    await expect(firstPanel).toHaveCSS('opacity', '1', { timeout: 8000 })
+    await expect(firstPanel.locator('.panel-title')).not.toBeEmpty()
   })
 })
