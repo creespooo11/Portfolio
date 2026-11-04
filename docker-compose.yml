@@ -1,4 +1,76 @@
+# Only the frontend (Nginx) is published to the network. Databases, Kafka
+# and the backend services listen on 127.0.0.1 only: reachable from this
+# machine for local tools, never from outside (MongoDB has no auth, and the
+# services' admin endpoints have no login).
 services:
+  frontend:
+    build:
+      context: ./frontend
+    container_name: portfolio-frontend
+    restart: unless-stopped
+    depends_on:
+      - portfolio-service
+      - contact-service
+    ports:
+      - "${FRONTEND_PORT}:80"
+
+  portfolio-service:
+    build:
+      context: ./backend/portfolio-service
+    container_name: portfolio-service
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: 5432
+      PORTFOLIO_SERVICE_PORT: 8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${PORTFOLIO_SERVICE_PORT}:8081"
+
+  contact-service:
+    build:
+      context: ./backend/contact-service
+    container_name: contact-service
+    restart: unless-stopped
+    environment:
+      REDPANDA_HOST: redpanda
+      REDPANDA_PORT: 9092
+      KAFKA_TOPIC_CONTACT_CREATED: ${KAFKA_TOPIC_CONTACT_CREATED}
+      CONTACT_SERVICE_PORT: 8082
+    depends_on:
+      - redpanda
+    ports:
+      - "127.0.0.1:${CONTACT_SERVICE_PORT}:8082"
+
+  notification-service:
+    build:
+      context: ./backend/notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    environment:
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      REDPANDA_HOST: redpanda
+      REDPANDA_PORT: 9092
+      KAFKA_TOPIC_CONTACT_CREATED: ${KAFKA_TOPIC_CONTACT_CREATED}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      NOTIFICATION_TARGET_EMAIL: ${NOTIFICATION_TARGET_EMAIL}
+      NOTIFICATION_SERVICE_PORT: 8083
+    depends_on:
+      - mongodb
+      - redpanda
+    ports:
+      - "127.0.0.1:${NOTIFICATION_SERVICE_PORT}:8083"
+
   postgres:
     image: postgres:16-alpine
     container_name: portfolio-postgres
@@ -8,7 +80,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +96,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     ports:
-      - "${MONGO_PORT}:27017"
+      - "127.0.0.1:${MONGO_PORT}:27017"
     volumes:
       - mongo-data:/data/db
 
@@ -46,8 +118,8 @@ services:
       - --pandaproxy-addr=internal://0.0.0.0:8082,external://0.0.0.0:18082
       - --advertise-pandaproxy-addr=internal://redpanda:8082,external://localhost:18082
     ports:
-      - "${REDPANDA_PORT}:19092"
-      - "${REDPANDA_ADMIN_PORT}:9644"
+      - "127.0.0.1:${REDPANDA_PORT}:19092"
+      - "127.0.0.1:${REDPANDA_ADMIN_PORT}:9644"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
 

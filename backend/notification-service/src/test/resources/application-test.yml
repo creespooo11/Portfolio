@@ -1,0 +1,8 @@
+spring:
+  data:
+    mongodb:
+      database: notifications-test
+
+contact:
+  kafka:
+    topic: contact.created.test
