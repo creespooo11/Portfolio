@@ -1,3 +1,7 @@
+# Only the frontend (Nginx) is published to the network. Databases, Kafka
+# and the backend services listen on 127.0.0.1 only: reachable from this
+# machine for local tools, never from outside (MongoDB has no auth, and the
+# services' admin endpoints have no login).
 services:
   frontend:
     build:
@@ -26,7 +30,7 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      - "${PORTFOLIO_SERVICE_PORT}:8081"
+      - "127.0.0.1:${PORTFOLIO_SERVICE_PORT}:8081"
 
   contact-service:
     build:
@@ -41,7 +45,7 @@ services:
     depends_on:
       - redpanda
     ports:
-      - "${CONTACT_SERVICE_PORT}:8082"
+      - "127.0.0.1:${CONTACT_SERVICE_PORT}:8082"
 
   notification-service:
     build:
@@ -65,7 +69,7 @@ services:
       - mongodb
       - redpanda
     ports:
-      - "${NOTIFICATION_SERVICE_PORT}:8083"
+      - "127.0.0.1:${NOTIFICATION_SERVICE_PORT}:8083"
 
   postgres:
     image: postgres:16-alpine
@@ -76,7 +80,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -92,7 +96,7 @@ services:
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     ports:
-      - "${MONGO_PORT}:27017"
+      - "127.0.0.1:${MONGO_PORT}:27017"
     volumes:
       - mongo-data:/data/db
 
@@ -114,8 +118,8 @@ services:
       - --pandaproxy-addr=internal://0.0.0.0:8082,external://0.0.0.0:18082
       - --advertise-pandaproxy-addr=internal://redpanda:8082,external://localhost:18082
     ports:
-      - "${REDPANDA_PORT}:19092"
-      - "${REDPANDA_ADMIN_PORT}:9644"
+      - "127.0.0.1:${REDPANDA_PORT}:19092"
+      - "127.0.0.1:${REDPANDA_ADMIN_PORT}:9644"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
 

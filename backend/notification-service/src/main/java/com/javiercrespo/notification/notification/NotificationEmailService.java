@@ -49,7 +49,9 @@ public class NotificationEmailService {
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setFrom(fromAddress);
             mailMessage.setTo(targetEmail);
-            mailMessage.setSubject("Nuevo mensaje de contacto de " + event.name());
+            // The name is user input: strip line breaks/control characters so
+            // it can't inject extra mail headers through the subject line.
+            mailMessage.setSubject("Nuevo mensaje de contacto de " + singleLine(event.name()));
             mailMessage.setText("""
                     Nombre: %s
                     Email: %s
@@ -65,6 +67,10 @@ public class NotificationEmailService {
             log.error("Fallo al enviar el email de notificacion para el evento {}", event.eventId(), ex);
             return EmailResult.FAILED;
         }
+    }
+
+    private static String singleLine(String value) {
+        return value == null ? "" : value.replaceAll("\\p{Cntrl}", " ").trim();
     }
 
     private boolean isConfigured() {

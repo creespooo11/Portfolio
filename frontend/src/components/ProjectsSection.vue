@@ -27,6 +27,15 @@ function tagFor(name: string): string {
   return TAGS[name.trim().toLowerCase()] ?? 'PROYECTO'
 }
 
+/**
+ * Links come from the API: only http(s) URLs are rendered, so a
+ * javascript: or data: URL can never end up in an href (the backend
+ * validates this too; this is the second line of defence).
+ */
+function safeUrl(url: string | null | undefined): string | null {
+  return url && /^https?:\/\//i.test(url) ? url : null
+}
+
 const { supported } = useStage(
   sectionEl,
   projectsStage({
@@ -68,8 +77,20 @@ const total = String(props.projects.length).padStart(2, '0')
             <h3 class="panel-title">{{ project.name }}</h3>
             <p class="panel-text">{{ project.description }}</p>
             <p class="panel-links">
-              <a v-if="project.liveUrl" :href="project.liveUrl" target="_blank" rel="noreferrer">Ver web ↗</a>
-              <a :href="project.repositoryUrl" target="_blank" rel="noreferrer">Código ↗</a>
+              <a
+                v-if="safeUrl(project.liveUrl)"
+                :href="safeUrl(project.liveUrl)!"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Ver web ↗</a
+              >
+              <a
+                v-if="safeUrl(project.repositoryUrl)"
+                :href="safeUrl(project.repositoryUrl)!"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Código ↗</a
+              >
             </p>
           </article>
         </div>
