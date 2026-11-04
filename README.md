@@ -81,7 +81,7 @@ Las credenciales, claves SMTP y valores de producción no se guardan en Git. Usa
 Con el stack local arrancado, `portfolio-service` está disponible en `http://localhost:8081`:
 
 - `GET /api/projects` y `GET /api/projects/{id}`: consulta de proyectos.
-- `POST`, `PUT` y `DELETE /api/projects/{id}`: operaciones CRUD iniciales para administración local.
+- `POST`, `PUT` y `DELETE /api/projects/{id}`: administración local **sin autenticación**, desactivada por defecto. Solo existen si se arranca con `PORTFOLIO_ADMIN_ENDPOINTS=true`; nunca en un entorno desplegado (Nginx además rechaza cualquier escritura en `/api/`).
 - `GET /api/skills`: consulta de tecnologías y habilidades.
 - `GET /api/experience`: consulta de experiencia.
 
@@ -95,7 +95,7 @@ Si la validación es correcta, `contact-service` **no escribe en ninguna base de
 
 `notification-service` está disponible en `http://localhost:8083`:
 
-- `GET /api/notifications?page=0&size=20`: lista paginada (orden por fecha de recepción descendente) de los mensajes de contacto procesados, tal y como quedaron guardados en MongoDB. Sin autenticación por ahora.
+- `GET /api/notifications?page=0&size=20`: lista paginada (orden por fecha de recepción descendente) de los mensajes de contacto procesados, tal y como quedaron guardados en MongoDB. Contiene datos personales y no tiene autenticación, así que está **desactivada por defecto**: solo existe con `NOTIFICATION_ADMIN_ENDPOINT=true`, para depurar en local.
 
 ### Flujo end-to-end del formulario de contacto
 
@@ -109,7 +109,18 @@ Esto ya funciona de verdad, de principio a fin, tanto en `npm run dev` como dent
    - Intenta enviar un email de notificación a `NOTIFICATION_TARGET_EMAIL` vía `JavaMailSender`, usando `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` y `SMTP_PASSWORD`.
    - Actualiza el mismo documento con el resultado: `EMAIL_SENT` si el envío real tuvo éxito, `EMAIL_FAILED` si SMTP estaba configurado pero el envío falló, o `EMAIL_SIMULATED` si no hay `SMTP_HOST`/`NOTIFICATION_TARGET_EMAIL` configurados en el entorno (caso por defecto en local, donde el intento se deja constancia en los logs de consola en vez de enviar un email real).
 5. El frontend muestra un mensaje de confirmación en cuanto recibe el `202 Accepted` y limpia el formulario, sin esperar a que el email se haya enviado de verdad.
-6. `GET /api/notifications` permite comprobar en cualquier momento qué mensajes se han procesado y con qué estado, sin necesidad de acceder directamente a MongoDB.
+6. Con `NOTIFICATION_ADMIN_ENDPOINT=true`, `GET /api/notifications` permite comprobar qué mensajes se han procesado y con qué estado sin acceder directamente a MongoDB (solo en local).
+
+## Seguridad
+
+- Solo el frontend (Nginx) se publica a la red. Bases de datos, Kafka y los servicios escuchan en `127.0.0.1` (ver `docker-compose.yml`).
+- La API pública es de solo lectura, salvo `POST /api/contact`. Nginx rechaza el resto de escrituras y limita peticiones por IP: 5 envíos del formulario por minuto y 20 peticiones por segundo al resto de la API.
+- Nginx envía cabeceras de seguridad (CSP, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`), no anuncia su versión y limita el tamaño de las peticiones a 16 KB.
+- Las respuestas de error nunca incluyen trazas ni mensajes internos (`server.error.*` en cada servicio).
+- El formulario valida longitud, formato de email y que el nombre no tenga saltos de línea (evita inyectar cabeceras en el email). El email se envía en texto plano.
+- Los enlaces de proyectos solo admiten URLs `http(s)`, tanto en el backend como al pintarlos en el frontend.
+- Las imágenes de los servicios Java se ejecutan con un usuario sin privilegios.
+- Antes de desplegar en un servidor: cambiar `POSTGRES_PASSWORD` por una contraseña fuerte, activar la autenticación de MongoDB y servir la web por HTTPS (y entonces añadir HSTS).
 
 ## Frontend local
 

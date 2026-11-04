@@ -112,7 +112,7 @@ export function stackStage({ count, labels, section }: StackOptions): StageFacto
         section.style.setProperty('--stack-progress', progress.toFixed(4))
 
         // Labels: pinned just outside each node, gone before the dive.
-        const fade = (1 - smoothstep(0.32, 0.5, progress)) * smoothstep(0.6, 1, presence)
+        const fade = (1 - smoothstep(0.42, 0.58, progress)) * smoothstep(0.6, 1, presence)
         const elements = labels()
         nodes.forEach((node, i) => {
           const element = elements[i]

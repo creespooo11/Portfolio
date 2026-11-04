@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Entity
@@ -25,14 +26,20 @@ public class Project {
     @Size(max = 500)
     private String description;
 
+    // Links are rendered as <a href> in the frontend: only http(s) URLs, so a
+    // javascript: or data: URL can never be stored and executed on click.
     @NotBlank
     @Size(max = 500)
+    @Pattern(regexp = "^https?://[^\\s]+$", message = "Must be an http(s) URL")
     private String repositoryUrl;
 
     @Size(max = 500)
+    @Pattern(regexp = "^https?://[^\\s]+$", message = "Must be an http(s) URL")
     private String liveUrl;
 
+    // A file name inside the frontend's assets folder, never a path or URL.
     @Size(max = 300)
+    @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "Must be a plain file name")
     private String imageUrl;
 
     @NotNull

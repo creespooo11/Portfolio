@@ -87,7 +87,10 @@ La web tiene que ir muy fluida; es un requisito, no un extra.
   funde según la "presencia" de su escena, y en el cambio de sección la
   cámara vuela (llega desde atrás, sale hacia delante). Nada de páginas
   deslizándose entre escenas. En móvil el texto fluye normal.
-- El progreso de scroll que reciben las escenas va suavizado en el motor.
+- El progreso de scroll que reciben las escenas va suavizado en el motor. Cuenta
+  desde que la sección aparece hasta que se va (no solo mientras está
+  anclada): si no, la figura entraba "parada" durante media pantalla de
+  scroll y luego arrancaba. Solo la portada usa el tramo anclado.
 - Entradas a cada escena: un único movimiento, el vuelo corto de cámara del
   motor. Las escenas no añaden zooms ni desplazamientos propios ligados a la
   presencia (sumados, la figura aparecía diminuta y oscura y tardaba en

@@ -13,7 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -56,5 +59,33 @@ class ProjectControllerTest {
                 .containsEntry("VitSync", "vitsync.webp")
                 .containsEntry("PowerSupps", "powersupps.webp")
                 .containsEntry("Portfolio", "portfolio-placeholder.webp");
+    }
+
+    /**
+     * The write endpoints have no authentication, so they must not exist
+     * unless PORTFOLIO_ADMIN_ENDPOINTS=true: by default nobody can create,
+     * edit or delete projects through the public API.
+     */
+    @Test
+    void writeEndpointsAreNotExposedByDefault() throws Exception {
+        String body = """
+                {"name":"x","description":"x","repositoryUrl":"https://example.com","displayOrder":9}
+                """;
+        mockMvc.perform(post("/api/projects").contentType("application/json").content(body))
+                .andExpect(status().isMethodNotAllowed());
+        mockMvc.perform(put("/api/projects/1").contentType("application/json").content(body))
+                .andExpect(status().isMethodNotAllowed());
+        mockMvc.perform(delete("/api/projects/1"))
+                .andExpect(status().isMethodNotAllowed());
+    }
+
+    @Test
+    void unknownProjectIsA404WithoutStackTrace() throws Exception {
+        String json = mockMvc.perform(get("/api/projects/999999"))
+                .andExpect(status().isNotFound())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertThat(json).doesNotContain("Exception").doesNotContain("at com.");
     }
 }

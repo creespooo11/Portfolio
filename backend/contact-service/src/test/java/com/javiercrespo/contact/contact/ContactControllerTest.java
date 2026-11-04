@@ -93,4 +93,25 @@ class ContactControllerTest {
                 .andExpect(jsonPath("$.details").isArray())
                 .andExpect(jsonPath("$.details.length()").value(3));
     }
+
+    /**
+     * The name ends up in the notification email's subject: a line break in
+     * it could inject extra mail headers, so it must be rejected up front.
+     */
+    @Test
+    void nameWithLineBreakIsRejected() throws Exception {
+        String payload = """
+                {
+                  "name": "Ada\\r\\nBcc: victim@example.com",
+                  "email": "ada@example.com",
+                  "message": "Hola"
+                }
+                """;
+
+        mockMvc.perform(post("/api/contact")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.details[0].field").value("name"));
+    }
 }
